@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --neon-blue: #00a8ff;
+  --neon-purple: #9d00ff;
+  --neon-pink: #ff00f7;
+  --dark-bg: #0a0a1e;
+  --light-bg: #f0f0f7;
+  --cyber-grid: #1a1b4e;
+}
+
+.dark {
+  --bg-primary: var(--dark-bg);
+  --text-primary: #ffffff;
+  --text-secondary: #a0a0b0;
+}
+
+.light {
+  --bg-primary: var(--light-bg);
+  --text-primary: #1a1b4e;
+  --text-secondary: #4a4b6e;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.cyber-grid {
+  background-image: linear-gradient(var(--cyber-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--cyber-grid) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.subtle-neon-text {
+  text-shadow: 0 0 5px rgba(0, 168, 255, 0.5);
+}
+
+.neon-border {
+  box-shadow: 0 0 5px var(--neon-purple), 0 0 10px var(--neon-purple);
+}
+
+.glass-effect {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.floating {
+  animation: float 6s ease-in-out infinite;
+}
+
