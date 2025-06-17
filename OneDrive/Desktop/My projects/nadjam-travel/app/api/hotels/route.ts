@@ -109,6 +109,7 @@ export async function POST(req: NextRequest) {
 
     const finalHotelData = {
       ...body,
+      images: Array.isArray(body.images) ? body.images : [],
       price: parseFloat(body.price),
       originalPrice: parseFloat(body.originalPrice),
       discount: parseInt(body.discount, 10),
