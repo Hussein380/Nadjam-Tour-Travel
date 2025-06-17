@@ -11,6 +11,7 @@ import { Hotel } from '@/lib/types';
 import Link from 'next/link';
 import { getAuth } from 'firebase/auth';
 import { toast } from 'sonner';
+import Image from 'next/image';
 
 export default function AdminHotelsPage() {
     const [hotels, setHotels] = useState<Hotel[]>([]);
@@ -132,6 +133,16 @@ export default function AdminHotelsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {hotels.map((hotel) => (
                     <Card key={hotel.id} className="relative flex flex-col justify-between">
+                        {hotel.images && hotel.images.length > 0 || hotel.image ? (
+                            <div className="relative w-full h-48 bg-gray-100">
+                                <Image
+                                    src={hotel.images && hotel.images.length > 0 ? hotel.images[0] : (hotel.image || "/placeholder.svg")}
+                                    alt={hotel.name}
+                                    fill
+                                    className="object-cover rounded-t-lg"
+                                />
+                            </div>
+                        ) : null}
                         <CardHeader>
                             <div className="flex justify-between items-start">
                                 <div className="flex-1 mr-2">

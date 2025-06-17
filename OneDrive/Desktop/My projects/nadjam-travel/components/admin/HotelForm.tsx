@@ -8,8 +8,8 @@ import * as z from 'zod';
 import { toast } from 'sonner';
 import { Hotel } from '@/lib/types';
 import { getAuth } from 'firebase/auth';
-// import Image from 'next/image';
-// import { UploadCloud, X } from 'lucide-react';
+import Image from 'next/image';
+import { UploadCloud, X } from 'lucide-react';
 import imageCompression from 'browser-image-compression';
 
 import { Button } from '@/components/ui/button';
@@ -55,8 +55,9 @@ interface HotelFormProps {
 
 export default function HotelForm({ initialData }: HotelFormProps) {
     const router = useRouter();
-    // const [imagePreview, setImagePreview] = useState<string | null>(initialData?.image || null);
-    // const [imageFile, setImageFile] = useState<File | undefined>(undefined);
+    // Multiple image upload state
+    const [imageFiles, setImageFiles] = useState<File[]>([]);
+    const [imagePreviews, setImagePreviews] = useState<string[]>([]);
     const form = useForm<HotelFormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: initialData ? {
@@ -99,27 +100,54 @@ export default function HotelForm({ initialData }: HotelFormProps) {
             if (!user) throw new Error('You must be logged in to perform this action.');
             const token = await user.getIdToken();
 
-            // Removed image upload logic for now
-            // let imageUrl = initialData?.image || '';
-            // if (imageFile) {
-            //     const uploadData = new FormData();
-            //     uploadData.append('image', imageFile);
-            //     const uploadRes = await fetch('/api/upload', {
-            //         method: 'POST',
-            //         body: uploadData,
-            //     });
-            //     if (!uploadRes.ok) {
-            //         throw new Error('Image upload failed.');
-            //     }
-            //     const uploadJson = await uploadRes.json();
-            //     imageUrl = uploadJson.url;
-            // }
+            // 1. Compress all selected images
+            let uploadedImageUrls: string[] = [];
+            if (imageFiles.length > 0) {
+                const compressedFiles: File[] = [];
+                for (const file of imageFiles) {
+                    try {
+                        const compressed = await imageCompression(file, {
+                            maxSizeMB: 1,
+                            maxWidthOrHeight: 1920,
+                            useWebWorker: true,
+                        });
+                        if (compressed.size > 10 * 1024 * 1024) {
+                            toast.error('One of the images is still too large after compression (max 10MB).');
+                            return;
+                        }
+                        compressedFiles.push(compressed);
+                    } catch (err) {
+                        toast.error('Image compression failed.');
+                        return;
+                    }
+                }
+                // 2. Upload all images to /api/upload
+            const formData = new FormData();
+                compressedFiles.forEach((file, idx) => {
+                    formData.append('images', file, file.name);
+                });
+                const uploadRes = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData,
+                });
+                if (!uploadRes.ok) {
+                    toast.error('Image upload failed.');
+                    return;
+                }
+                const uploadJson = await uploadRes.json();
+                uploadedImageUrls = uploadJson.urls || [];
+                if (!Array.isArray(uploadedImageUrls) || uploadedImageUrls.length !== compressedFiles.length) {
+                    toast.error('Image upload failed: unexpected response.');
+                    return;
+                }
+            }
 
+            // 3. Submit hotel data with image URLs
             const method = initialData ? 'PUT' : 'POST';
             const url = initialData ? `/api/hotels/${initialData.id}` : '/api/hotels';
             const hotelPayload = {
                 ...values,
-                // image: imageUrl, // Temporarily remove image from payload
+                images: uploadedImageUrls, // Array of image URLs
                 amenities: values.amenities.split(',').map((a: string) => a.trim()),
                 active: true, // Always set active true for new hotels
             };
@@ -137,41 +165,29 @@ export default function HotelForm({ initialData }: HotelFormProps) {
             }
             toast.success(initialData ? 'Hotel updated successfully!' : 'Hotel created successfully!');
             router.push('/admin/hotels');
-            router.refresh();
-        } catch (error: any) {
-            console.error('Failed to submit hotel form:', error);
-            toast.error(error.message || 'An unexpected error occurred.');
+        } catch (err: any) {
+            toast.error(err.message || 'Something went wrong.');
         }
     };
 
-    // const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    //     const file = e.target.files?.[0];
-    //     if (!file) return;
-    //     const options = {
-    //         maxSizeMB: 1, // Compress to max 1MB
-    //         maxWidthOrHeight: 1920,
-    //         useWebWorker: true,
-    //     };
-    //     try {
-    //         const compressedBlob = await imageCompression(file, options);
-    //         const compressedFile = new File([compressedBlob], file.name, { type: file.type });
-    //         if (compressedFile.size > 10 * 1024 * 1024) {
-    //             toast.error('Image too large to upload. Please choose a smaller image.');
-    //             return;
-    //         }
-    //         setImageFile(compressedFile);
-    //         setValue('image', compressedFile, { shouldValidate: true });
-    //         const reader = new FileReader();
-    //         reader.onloadend = () => {
-    //             setImagePreview(reader.result as string);
-    //         };
-    //         reader.readAsDataURL(compressedFile);
-    //     } catch (error) {
-    //         console.error('Image compression failed:', error);
-    //         toast.error('Could not compress image. Please try again or choose a different file.');
-    //         return;
-    //     }
-    // };
+    // Handle image selection
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        setImageFiles(prev => [...prev, ...files]);
+        files.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                setImagePreviews(prev => [...prev, ev.target?.result as string]);
+            };
+            reader.readAsDataURL(file);
+        });
+    };
+
+    // Remove image
+    const handleRemoveImage = (idx: number) => {
+        setImageFiles(prev => prev.filter((_, i) => i !== idx));
+        setImagePreviews(prev => prev.filter((_, i) => i !== idx));
+    };
 
     return (
         <FormProvider {...form}>
@@ -217,62 +233,43 @@ export default function HotelForm({ initialData }: HotelFormProps) {
                         </FormItem>
                     )}
                 />
-                {/* Commented out image upload for now */}
-                {/* <FormField
-                    control={form.control}
-                    name="image"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Hotel Image</FormLabel>
-                            <FormControl>
-                                <div className="w-full">
-                                    <Input
-                                        type="file"
-                                        id="image-upload"
-                                        className="hidden"
-                                        accept="image/png, image/jpeg, image/webp"
-                                        onChange={e => {
-                                            // handleImageChange(e);
-                                            // field.onChange(e); // keep RHF in sync
-                                        }}
-                                    />
-                                    <label
-                                        htmlFor="image-upload"
-                                        className="relative flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
-                                    >
-                                        {imagePreview ? (
-                                            <>
-                                                <Image src={imagePreview} alt="Preview" fill className="object-contain rounded-lg" />
-                                                <div
-                                                    className="absolute top-2 right-2 p-1 bg-red-500 rounded-full text-white cursor-pointer hover:bg-red-600"
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        // setImagePreview(null);
-                                                        // setImageFile(undefined);
-                                                        // setValue('image', undefined, { shouldValidate: true });
-                                                        const fileInput = document.getElementById('image-upload') as HTMLInputElement;
-                                                        if (fileInput) fileInput.value = "";
-                                                    }}
-                                                >
-                                                    <X size={16} />
-                                                </div>
-                                            </>
-                                        ) :
-                                            <div className="text-center">
-                                                <UploadCloud size={40} className="mx-auto text-gray-400" />
-                                                <p className="mt-2 text-sm text-gray-500">
-                                                    <span className="font-semibold">Click to upload</span> or drag and drop
-                                                </p>
-                                                <p className="text-xs text-gray-400">PNG, JPG, or WEBP</p>
-                                            </div>
-                                        }
-                                    </label>
-                                </div>
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                /> */}
+                {/* Multiple Image Upload Section */}
+                <div>
+                    <FormLabel>Hotel Images</FormLabel>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        id="hotel-images-upload"
+                        className="hidden"
+                        onChange={handleImageChange}
+                    />
+                    <label
+                        htmlFor="hotel-images-upload"
+                        className="relative flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 mb-4"
+                    >
+                        <UploadCloud size={40} className="mx-auto text-gray-400" />
+                        <p className="mt-2 text-sm text-gray-500">
+                            <span className="font-semibold">Click to upload</span> or drag and drop
+                        </p>
+                        <p className="text-xs text-gray-400">PNG, JPG, or WEBP. You can select multiple images.</p>
+                    </label>
+                    {/* Previews */}
+                    <div className="flex flex-wrap gap-4">
+                        {imagePreviews.map((src, idx) => (
+                            <div key={idx} className="relative w-32 h-32 border rounded overflow-hidden">
+                                <Image src={src} alt={`Preview ${idx + 1}`} fill className="object-cover" />
+                                <button
+                                    type="button"
+                                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                                    onClick={() => handleRemoveImage(idx)}
+                                >
+                                    <X size={16} />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
                 <FormField
                     control={form.control}
                     name="amenities"

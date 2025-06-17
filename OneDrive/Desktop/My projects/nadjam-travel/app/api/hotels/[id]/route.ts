@@ -79,16 +79,16 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
             hotelData = await req.json();
         } else if (contentType.includes('multipart/form-data')) {
             const formData = await req.formData();
-            for (const [key, value] of formData.entries()) {
-                if (key === 'image') {
-                    imageFile = value as File;
-                } else {
-                    hotelData[key] = value;
-                }
+        for (const [key, value] of formData.entries()) {
+            if (key === 'image') {
+                imageFile = value as File;
+            } else {
+                hotelData[key] = value;
             }
-            // If a new image is provided, upload it.
-            if (imageFile && imageFile.size > 0) {
-                imageUrl = await uploadToCloudinary(imageFile);
+        }
+        // If a new image is provided, upload it.
+        if (imageFile && imageFile.size > 0) {
+            imageUrl = await uploadToCloudinary(imageFile);
             }
         } else {
             return NextResponse.json({ error: 'Unsupported content type' }, { status: 400 });

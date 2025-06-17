@@ -15,11 +15,11 @@ cloudinary.config({
     secure: true,
 });
 
-type FormidableParseResult = { fields: Record<string, any>; files: Record<string, FormidableFile> };
+type FormidableParseResult = { fields: Record<string, any>; files: Record<string, FormidableFile | FormidableFile[] | undefined> };
 
 function formidableParse(req: NextApiRequest): Promise<FormidableParseResult> {
     return new Promise((resolve, reject) => {
-        const form = formidable({ multiples: false });
+        const form = formidable({ multiples: true });
         form.parse(req, (err, fields, files) => {
             if (err) reject(err);
             else resolve({ fields, files });
@@ -33,20 +33,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
     try {
         const { files } = await formidableParse(req);
-        console.log('Formidable files:', files);
-        const fileArray = Array.isArray(files.image) ? files.image : [files.image];
-        const file = fileArray[0];
-        console.log('fileArray:', fileArray);
-        if (!file) {
-            console.error('No image file found in upload');
-            return res.status(400).json({ error: 'No image file provided' });
+        let fileArray: FormidableFile[] = [];
+        if (Array.isArray(files.images)) {
+            fileArray = files.images;
+        } else if (files.images) {
+            fileArray = [files.images];
+        } else if (files.image) {
+            fileArray = Array.isArray(files.image) ? files.image : [files.image];
         }
-        console.log('Uploading to Cloudinary:', file.filepath);
-        const result = await cloudinary.uploader.upload(file.filepath, {
-            folder: 'nadjam-travel',
-        });
-        console.log('Cloudinary result:', result);
-        return res.status(200).json({ url: result.secure_url });
+        if (!fileArray.length) {
+            return res.status(400).json({ error: 'No image files provided' });
+        }
+        const uploadResults = await Promise.all(
+            fileArray.map(file =>
+                cloudinary.uploader.upload(file.filepath, { folder: 'nadjam-travel' })
+            )
+        );
+        const urls = uploadResults.map(r => r.secure_url);
+        return res.status(200).json({ urls });
     } catch (error: any) {
         console.error('Upload failed:', error);
         return res.status(500).json({ error: 'Upload failed', details: error.message });

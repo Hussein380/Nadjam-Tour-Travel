@@ -397,7 +397,7 @@ export default function HotelsPage() {
                       >
                         <div className="relative h-64 overflow-hidden">
                           <Image
-                            src={hotel.image || "/placeholder.svg"}
+                            src={(hotel.images && hotel.images.length > 0) ? hotel.images[0] : (hotel.image || "/placeholder.svg")}
                             alt={hotel.name}
                             fill
                             className="object-cover group-hover:scale-110 transition-transform duration-500"
