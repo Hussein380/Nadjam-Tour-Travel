@@ -7,6 +7,7 @@ export interface Hotel {
     price: number;
     originalPrice: number;
     image: string;
+    images?: string[];
     amenities: string[];
     description: string;
     category: string;

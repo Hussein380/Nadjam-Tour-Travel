@@ -12,6 +12,11 @@ import Link from 'next/link';
 import { getAuth } from 'firebase/auth';
 import { toast } from 'sonner';
 import Image from 'next/image';
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
 
 export default function AdminHotelsPage() {
     const [hotels, setHotels] = useState<Hotel[]>([]);
@@ -55,6 +60,10 @@ export default function AdminHotelsPage() {
     };
 
     const handleUpdate = async (id: string, updates: Partial<Hotel>) => {
+        if (updates.active === false) {
+            const confirmDeactivate = window.confirm('Are you sure you want to deactivate this hotel?');
+            if (!confirmDeactivate) return;
+        }
         const token = await getAuthToken();
         if (!token) return;
 
@@ -78,7 +87,8 @@ export default function AdminHotelsPage() {
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Are you sure you want to permanently delete this hotel? This action cannot be undone.')) return;
+        const confirmDelete = window.confirm('Are you sure you want to permanently delete this hotel? This action cannot be undone.');
+        if (!confirmDelete) return;
 
         const token = await getAuthToken();
         if (!token) return;
@@ -133,16 +143,42 @@ export default function AdminHotelsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {hotels.map((hotel) => (
                     <Card key={hotel.id} className="relative flex flex-col justify-between">
-                        {hotel.images && hotel.images.length > 0 || hotel.image ? (
+                        {(hotel.images && hotel.images.length > 0) ? (
                             <div className="relative w-full h-48 bg-gray-100">
-                                <Image
-                                    src={hotel.images && hotel.images.length > 0 ? hotel.images[0] : (hotel.image || "/placeholder.svg")}
-                                    alt={hotel.name}
-                                    fill
-                                    className="object-cover rounded-t-lg"
-                                />
+                                <Swiper
+                                    modules={[Navigation, Pagination]}
+                                    navigation
+                                    pagination={{ clickable: true }}
+                                    spaceBetween={16}
+                                    slidesPerView={1}
+                                    className="rounded-t-lg overflow-hidden h-full"
+                                >
+                                    {hotel.images.map((url, idx) => (
+                                        <SwiperSlide key={idx}>
+                                            <div className="relative w-full h-48">
+                                                <Image
+                                                    src={url}
+                                                    alt={`Hotel image ${idx + 1}`}
+                                                    fill
+                                                    className="object-cover"
+                                                />
+                                            </div>
+                                        </SwiperSlide>
+                                    ))}
+                                </Swiper>
                             </div>
-                        ) : null}
+                        ) : (
+                            hotel.image ? (
+                                <div className="relative w-full h-48 bg-gray-100">
+                                    <Image
+                                        src={hotel.image}
+                                        alt={hotel.name}
+                                        fill
+                                        className="object-cover rounded-t-lg"
+                                    />
+                                </div>
+                            ) : null
+                        )}
                         <CardHeader>
                             <div className="flex justify-between items-start">
                                 <div className="flex-1 mr-2">

@@ -11,6 +11,11 @@ import { getAuth } from 'firebase/auth';
 import Image from 'next/image';
 import { UploadCloud, X } from 'lucide-react';
 import imageCompression from 'browser-image-compression';
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
 
 import { Button } from '@/components/ui/button';
 import {
@@ -58,6 +63,8 @@ export default function HotelForm({ initialData }: HotelFormProps) {
     // Multiple image upload state
     const [imageFiles, setImageFiles] = useState<File[]>([]);
     const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+    const [existingImages, setExistingImages] = useState<string[]>(initialData?.images || []);
+    const [replacementUploads, setReplacementUploads] = useState<{ [idx: number]: string }>({});
     const form = useForm<HotelFormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: initialData ? {
@@ -122,7 +129,7 @@ export default function HotelForm({ initialData }: HotelFormProps) {
                     }
                 }
                 // 2. Upload all images to /api/upload
-            const formData = new FormData();
+                const formData = new FormData();
                 compressedFiles.forEach((file, idx) => {
                     formData.append('images', file, file.name);
                 });
@@ -189,6 +196,21 @@ export default function HotelForm({ initialData }: HotelFormProps) {
         setImagePreviews(prev => prev.filter((_, i) => i !== idx));
     };
 
+    // Remove existing image
+    const handleRemoveExistingImage = (idx: number) => {
+        setExistingImages(prev => prev.filter((_, i) => i !== idx));
+    };
+
+    // Handle replacement image upload
+    const handleReplacementUpload = (idx: number, file: File) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            setReplacementUploads(prev => ({ ...prev, [idx]: ev.target?.result as string }));
+            setImageFiles(prev => [...prev, file]);
+        };
+        reader.readAsDataURL(file);
+    };
+
     return (
         <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -233,6 +255,65 @@ export default function HotelForm({ initialData }: HotelFormProps) {
                         </FormItem>
                     )}
                 />
+                {/* Existing Images Swiper */}
+                {existingImages.length > 0 && (
+                    <div className="mb-4">
+                        <Swiper
+                            modules={[Navigation, Pagination]}
+                            navigation
+                            pagination={{ clickable: true }}
+                            spaceBetween={16}
+                            slidesPerView={1}
+                            className="rounded-lg overflow-hidden h-56"
+                        >
+                            {existingImages.map((url, idx) => (
+                                <SwiperSlide key={idx}>
+                                    <div className="relative w-full h-56">
+                                        {url ? (
+                                            <>
+                                                <Image
+                                                    src={url}
+                                                    alt={`Hotel image ${idx + 1}`}
+                                                    fill
+                                                    className="object-cover"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 z-20"
+                                                    onClick={() => handleRemoveExistingImage(idx)}
+                                                >
+                                                    <X size={16} />
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <div className="flex flex-col items-center justify-center h-full w-full bg-gray-100">
+                                                {replacementUploads[idx] ? (
+                                                    <Image src={replacementUploads[idx]} alt="Replacement Preview" fill className="object-cover" />
+                                                ) : (
+                                                    <>
+                                                        <label className="cursor-pointer text-blue-600 underline">
+                                                            Upload Replacement
+                                                            <input
+                                                                type="file"
+                                                                accept="image/*"
+                                                                className="hidden"
+                                                                onChange={e => {
+                                                                    if (e.target.files && e.target.files[0]) {
+                                                                        handleReplacementUpload(idx, e.target.files[0]);
+                                                                    }
+                                                                }}
+                                                            />
+                                                        </label>
+                                                    </>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </SwiperSlide>
+                            ))}
+                        </Swiper>
+                    </div>
+                )}
                 {/* Multiple Image Upload Section */}
                 <div>
                     <FormLabel>Hotel Images</FormLabel>
