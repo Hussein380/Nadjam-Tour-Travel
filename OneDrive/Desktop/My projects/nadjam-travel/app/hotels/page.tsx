@@ -8,6 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { Calendar, MapPin, Star, Users, Wifi, Car, Utensils, Waves, Search, Filter, Heart, Building2 } from "lucide-react"
 import Image from "next/image"
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
 
 export default function HotelsPage() {
   const [allHotels, setAllHotels] = useState([]);
@@ -396,12 +401,43 @@ export default function HotelsPage() {
                         className="overflow-hidden group hover:shadow-xl transition-all duration-300 border-0 shadow-lg"
                       >
                         <div className="relative h-64 overflow-hidden">
-                          <Image
-                            src={(hotel.images && hotel.images.length > 0) ? hotel.images[0] : (hotel.image || "/placeholder.svg")}
-                            alt={hotel.name}
-                            fill
-                            className="object-cover group-hover:scale-110 transition-transform duration-500"
-                          />
+                          {hotel.images && hotel.images.length > 0 ? (
+                            <>
+                              <Swiper
+                                modules={[Navigation, Pagination]}
+                                navigation
+                                pagination={{ clickable: true }}
+                                spaceBetween={16}
+                                slidesPerView={1}
+                                className="rounded-t-lg overflow-hidden h-full"
+                              >
+                                {hotel.images.map((url, idx) => (
+                                  <SwiperSlide key={idx}>
+                                    <div className="relative w-full h-64">
+                                      <Image
+                                        src={url}
+                                        alt={`Hotel image ${idx + 1}`}
+                                        fill
+                                        className="object-cover"
+                                      />
+                                    </div>
+                                  </SwiperSlide>
+                                ))}
+                              </Swiper>
+                              {hotel.images.length > 1 && (
+                                <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded z-20 select-none pointer-events-none">
+                                  Swipe or click arrows to see more
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <Image
+                              src={hotel.image || "/placeholder.svg"}
+                              alt={hotel.name}
+                              fill
+                              className="object-cover group-hover:scale-110 transition-transform duration-500"
+                            />
+                          )}
                           <div className="absolute top-4 left-4">
                             <Badge className="bg-red-500 text-white font-medium">{hotel.discount}% OFF</Badge>
                           </div>
