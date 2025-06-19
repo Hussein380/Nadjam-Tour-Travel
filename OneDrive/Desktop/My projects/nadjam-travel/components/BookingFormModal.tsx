@@ -31,6 +31,31 @@ const fieldHelpers: Record<string, string> = {
     payment: 'Choose your preferred payment method.',
 };
 
+const roomTypeOptions = [
+    { value: 'Single Room', label: 'Single Room' },
+    { value: 'Double Room', label: 'Double Room' },
+    { value: 'Twin Room', label: 'Twin Room' },
+    { value: 'Deluxe Room', label: 'Deluxe Room' },
+    { value: 'Superior Room', label: 'Superior Room' },
+    { value: 'Suite', label: 'Suite' },
+    { value: 'Junior Suite', label: 'Junior Suite' },
+    { value: 'Executive Suite', label: 'Executive Suite' },
+    { value: 'Family Room', label: 'Family Room' },
+    { value: 'Studio Room', label: 'Studio Room' },
+    { value: 'Apartment', label: 'Apartment' },
+    { value: 'Penthouse', label: 'Penthouse' },
+    { value: 'Bungalow', label: 'Bungalow' },
+    { value: 'Villa', label: 'Villa' },
+    { value: 'Connecting Room', label: 'Connecting Room' },
+    { value: 'Accessible Room', label: 'Accessible Room' },
+    { value: 'Presidential Suite', label: 'Presidential Suite' },
+    { value: 'Honeymoon Suite', label: 'Honeymoon Suite' },
+    { value: 'Dormitory', label: 'Dormitory' },
+    { value: 'Cabana', label: 'Cabana' },
+    { value: 'Cottage', label: 'Cottage' },
+    { value: 'Not Sure / Other', label: 'Not Sure / Other', value: 'other' },
+];
+
 export const BookingFormModal: React.FC<BookingFormModalProps> = ({ open, onClose, hotelName }) => {
     const [form, setForm] = useState({
         fullName: '',
@@ -48,6 +73,7 @@ export const BookingFormModal: React.FC<BookingFormModalProps> = ({ open, onClos
     const [submitting, setSubmitting] = useState(false);
     const [showHelper, setShowHelper] = useState<Record<string, boolean>>({});
     const countryOptions = countryList().getData();
+    const [roomTypeOther, setRoomTypeOther] = useState('');
 
     // Lock background scroll when modal is open
     useEffect(() => {
@@ -86,15 +112,23 @@ export const BookingFormModal: React.FC<BookingFormModalProps> = ({ open, onClos
         setForm((prev) => ({ ...prev, nationality: option ? option.label : '' }));
         setShowHelper((prev) => ({ ...prev, nationality: false }));
     };
+    const handleRoomTypeChange = (option: any) => {
+        setForm((prev) => ({ ...prev, roomType: option ? option.value : '' }));
+        setShowHelper((prev) => ({ ...prev, roomType: false }));
+        if (option && option.value !== 'other') {
+            setRoomTypeOther('');
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSubmitting(true);
         try {
+            const roomTypeToSend = form.roomType === 'other' ? roomTypeOther : form.roomType;
             const response = await fetch('/api/book-hotel', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...form, hotelName }),
+                body: JSON.stringify({ ...form, roomType: roomTypeToSend, hotelName }),
             });
             const result = await response.json();
             if (response.ok) {
@@ -203,15 +237,26 @@ export const BookingFormModal: React.FC<BookingFormModalProps> = ({ open, onClos
                         </div>
                         <div>
                             <label className="block text-sm font-medium mb-1">Room Type</label>
-                            <input
-                                type="text"
-                                name="roomType"
-                                value={form.roomType}
-                                onChange={handleChange}
+                            <Select
+                                options={roomTypeOptions}
+                                value={roomTypeOptions.find(option => option.value === form.roomType) || null}
+                                onChange={handleRoomTypeChange}
                                 onFocus={() => handleFocus('roomType')}
                                 onBlur={() => handleBlur('roomType')}
-                                className="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-400"
+                                classNamePrefix="react-select"
+                                placeholder="Select room type..."
+                                isSearchable={false}
                             />
+                            {form.roomType === 'other' && (
+                                <input
+                                    type="text"
+                                    name="roomTypeOther"
+                                    value={roomTypeOther}
+                                    onChange={e => setRoomTypeOther(e.target.value)}
+                                    placeholder="Please specify room type"
+                                    className="w-full border rounded px-3 py-2 mt-2 focus:outline-none focus:ring focus:border-blue-400"
+                                />
+                            )}
                             {showHelper.roomType && <div className="text-xs text-gray-500 mt-1 animate-fade-in">{fieldHelpers.roomType}</div>}
                         </div>
                     </div>
