@@ -13,10 +13,12 @@ import { Navigation, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
+import BookingFormModal from '@/components/BookingFormModal';
+import { Hotel } from '@/lib/types';
 
 export default function HotelsPage() {
-  const [allHotels, setAllHotels] = useState([]);
-  const [displayedHotels, setDisplayedHotels] = useState([]);
+  const [allHotels, setAllHotels] = useState<Hotel[]>([]);
+  const [displayedHotels, setDisplayedHotels] = useState<Hotel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
@@ -28,6 +30,8 @@ export default function HotelsPage() {
     amenities: [],
     location: ""
   });
+  const [bookingModalOpen, setBookingModalOpen] = useState(false);
+  const [selectedHotelName, setSelectedHotelName] = useState<string | null>(null);
 
   const ITEMS_PER_PAGE = 6;
 
@@ -498,7 +502,13 @@ export default function HotelsPage() {
                               <span className="text-2xl font-bold text-gray-900">${hotel.price}</span>
                               <span className="text-sm text-gray-500">per night</span>
                             </div>
-                            <Button className="bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white">
+                            <Button
+                              className="bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white"
+                              onClick={() => {
+                                setSelectedHotelName(hotel.name);
+                                setBookingModalOpen(true);
+                              }}
+                            >
                               Book Now
                             </Button>
                           </div>
@@ -568,6 +578,12 @@ export default function HotelsPage() {
           </div>
         </div>
       </section>
+
+      <BookingFormModal
+        open={bookingModalOpen}
+        onClose={() => setBookingModalOpen(false)}
+        hotelName={selectedHotelName || ''}
+      />
     </div>
   )
 }
