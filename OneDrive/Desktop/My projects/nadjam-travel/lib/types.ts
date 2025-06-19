@@ -16,6 +16,7 @@ export interface Hotel {
     active: boolean;
     createdAt: Date;
     updatedAt: Date;
+    types?: string[];
 }
 
 export interface Package {

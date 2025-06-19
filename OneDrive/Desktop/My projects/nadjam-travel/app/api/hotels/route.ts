@@ -120,6 +120,7 @@ export async function POST(req: NextRequest) {
       amenities: Array.isArray(body.amenities)
         ? body.amenities
         : body.amenities.split(',').map((a: string) => a.trim()),
+      types: Array.isArray(body.types) ? body.types : [],
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     };

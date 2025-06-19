@@ -50,6 +50,7 @@ const formSchema = z.object({
     reviews: z.coerce.number().min(0, 'Reviews must be a positive number.'),
     featured: z.boolean().default(false),
     active: z.boolean().default(true),
+    types: z.array(z.enum(['Budget', 'Standard', 'Luxury'])).min(1, 'Select at least one hotel type.'),
 });
 
 type HotelFormValues = z.infer<typeof formSchema>;
@@ -70,6 +71,7 @@ export default function HotelForm({ initialData }: HotelFormProps) {
         defaultValues: initialData ? {
             ...initialData,
             amenities: initialData.amenities.join(', '),
+            types: initialData.types || [],
             // image: undefined,
         } : {
             name: '',
@@ -85,6 +87,7 @@ export default function HotelForm({ initialData }: HotelFormProps) {
             reviews: 100,
             featured: false,
             active: true,
+            types: [],
         },
     });
 
@@ -157,6 +160,7 @@ export default function HotelForm({ initialData }: HotelFormProps) {
                 images: uploadedImageUrls, // Array of image URLs
                 amenities: values.amenities.split(',').map((a: string) => a.trim()),
                 active: true, // Always set active true for new hotels
+                types: values.types,
             };
             const response = await fetch(url, {
                 method,
@@ -362,6 +366,39 @@ export default function HotelForm({ initialData }: HotelFormProps) {
                             </FormControl>
                             <FormDescription>
                                 Please provide a comma-separated list of amenities.
+                            </FormDescription>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                {/* Hotel Type Selection */}
+                <FormField
+                    control={form.control}
+                    name="types"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Hotel Type</FormLabel>
+                            <div className="flex gap-4">
+                                {['Budget', 'Standard', 'Luxury'].map((type) => (
+                                    <label key={type} className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={field.value.includes(type)}
+                                            onChange={() => {
+                                                if (field.value.includes(type)) {
+                                                    field.onChange(field.value.filter((t: string) => t !== type));
+                                                } else {
+                                                    field.onChange([...field.value, type]);
+                                                }
+                                            }}
+                                            className="accent-blue-600"
+                                        />
+                                        <span>{type}</span>
+                                    </label>
+                                ))}
+                            </div>
+                            <FormDescription>
+                                Select one or more hotel types that apply.
                             </FormDescription>
                             <FormMessage />
                         </FormItem>

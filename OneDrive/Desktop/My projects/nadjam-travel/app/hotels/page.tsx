@@ -25,13 +25,13 @@ export default function HotelsPage() {
   const [hasMore, setHasMore] = useState(true);
   const [filters, setFilters] = useState({
     search: "",
-    category: "all",
-    priceRange: "all",
     amenities: [],
-    location: ""
+    location: "",
+    hotelTypes: [], // Budget, Standard, Luxury
   });
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
   const [selectedHotelName, setSelectedHotelName] = useState<string | null>(null);
+  const [showAmenitiesDropdown, setShowAmenitiesDropdown] = useState(false);
 
   const ITEMS_PER_PAGE = 6;
 
@@ -53,31 +53,14 @@ export default function HotelsPage() {
   }, []);
 
   // Calculate dynamic filter data
-  const filterData = useMemo(() => {
-    const categories = allHotels.reduce((acc, hotel) => {
-      const category = hotel.category;
-      acc[category] = (acc[category] || 0) + 1;
-      return acc;
-    }, {});
-
-    const priceRanges = allHotels.reduce((acc, hotel) => {
-      let range = "all";
-      if (hotel.price < 100) range = "0-100";
-      else if (hotel.price < 200) range = "100-200";
-      else if (hotel.price < 300) range = "200-300";
-      else range = "300+";
-      acc[range] = (acc[range] || 0) + 1;
-      return acc;
-    }, {});
-
+  const filterData: Record<string, any> = useMemo(() => {
     const allAmenities = allHotels.reduce((acc, hotel) => {
       hotel.amenities.forEach(amenity => {
         acc[amenity] = (acc[amenity] || 0) + 1;
       });
       return acc;
     }, {});
-
-    return { categories, priceRanges, allAmenities };
+    return { allAmenities };
   }, [allHotels]);
 
   // Filter hotels based on current filters
@@ -88,20 +71,6 @@ export default function HotelsPage() {
         !hotel.location.toLowerCase().includes(filters.search.toLowerCase())) {
         return false;
       }
-
-      // Category filter
-      if (filters.category !== "all" && hotel.category !== filters.category) {
-        return false;
-      }
-
-      // Price range filter
-      if (filters.priceRange !== "all") {
-        if (filters.priceRange === "0-100" && hotel.price >= 100) return false;
-        if (filters.priceRange === "100-200" && (hotel.price < 100 || hotel.price >= 200)) return false;
-        if (filters.priceRange === "200-300" && (hotel.price < 200 || hotel.price >= 300)) return false;
-        if (filters.priceRange === "300+" && hotel.price < 300) return false;
-      }
-
       // Amenities filter
       if (filters.amenities.length > 0) {
         const hasAllAmenities = filters.amenities.every(amenity =>
@@ -109,12 +78,16 @@ export default function HotelsPage() {
         );
         if (!hasAllAmenities) return false;
       }
-
       // Location filter
       if (filters.location && !hotel.location.toLowerCase().includes(filters.location.toLowerCase())) {
         return false;
       }
-
+      // Hotel type filter
+      if (filters.hotelTypes.length > 0) {
+        if (!hotel.types || !Array.isArray(hotel.types) || !filters.hotelTypes.some(type => hotel.types && hotel.types.includes(type))) {
+          return false;
+        }
+      }
       return true;
     });
   }, [allHotels, filters]);
@@ -136,15 +109,15 @@ export default function HotelsPage() {
     setPage(prev => prev + 1);
   };
 
-  const updateFilter = (key, value) => {
+  const updateFilter = (key: string, value: any) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
 
-  const toggleAmenity = (amenity) => {
+  const toggleAmenity = (amenity: string) => {
     setFilters(prev => ({
       ...prev,
       amenities: prev.amenities.includes(amenity)
-        ? prev.amenities.filter(a => a !== amenity)
+        ? prev.amenities.filter((a: string) => a !== amenity)
         : [...prev.amenities, amenity]
     }));
   };
@@ -285,83 +258,58 @@ export default function HotelsPage() {
                     />
                   </div>
 
-                  {/* Categories */}
-                  <div>
-                    <h3 className="font-medium text-gray-900 mb-3">Categories</h3>
-                    <div className="space-y-2">
-                      <div
-                        className={`flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${filters.category === "all" ? "bg-blue-50 border border-blue-200" : ""
-                          }`}
-                        onClick={() => updateFilter("category", "all")}
-                      >
-                        <span className="text-sm text-gray-700">All Hotels</span>
-                        <Badge variant="secondary" className="text-xs">
-                          {allHotels.length}
-                        </Badge>
-                      </div>
-                      {Object.entries(filterData.categories).map(([category, count]) => (
-                        <div
-                          key={category}
-                          className={`flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${filters.category === category ? "bg-blue-50 border border-blue-200" : ""
-                            }`}
-                          onClick={() => updateFilter("category", category)}
-                        >
-                          <span className="text-sm text-gray-700">{category}</span>
-                          <Badge variant="secondary" className="text-xs">
-                            {count}
-                          </Badge>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Price Range */}
-                  <div>
-                    <h3 className="font-medium text-gray-900 mb-3">Price Range (per night)</h3>
-                    <div className="space-y-2">
-                      {Object.entries(filterData.priceRanges).map(([range, count]) => (
-                        <div
-                          key={range}
-                          className={`flex items-center p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${filters.priceRange === range ? "bg-blue-50 border border-blue-200" : ""
-                            }`}
-                          onClick={() => updateFilter("priceRange", range)}
-                        >
-                          <input
-                            type="radio"
-                            name="priceRange"
-                            checked={filters.priceRange === range}
-                            onChange={() => updateFilter("priceRange", range)}
-                            className="mr-3"
-                          />
-                          <span className="text-sm text-gray-700">
-                            {range === "all" ? "All Prices" :
-                              range === "0-100" ? "Under $100" :
-                                range === "100-200" ? "$100 - $200" :
-                                  range === "200-300" ? "$200 - $300" : "$300+"}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Amenities */}
-                  <div>
+                  {/* Amenities Dropdown Filter */}
+                  <div className="relative mb-4">
                     <h3 className="font-medium text-gray-900 mb-3">Amenities</h3>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        className="w-full border rounded px-3 py-2 text-left bg-white hover:bg-gray-50 focus:outline-none focus:ring"
+                        onClick={() => setShowAmenitiesDropdown((prev: boolean) => !prev)}
+                      >
+                        {filters.amenities.length > 0 ? `${filters.amenities.length} selected` : 'Select amenities'}
+                      </button>
+                      {showAmenitiesDropdown && (
+                        <div className="absolute z-10 mt-2 w-full bg-white border rounded shadow-lg max-h-60 overflow-y-auto">
+                          {Object.keys(filterData.allAmenities).map((amenity) => (
+                            <label key={amenity} className="flex items-center px-4 py-2 cursor-pointer hover:bg-gray-50">
+                              <input
+                                type="checkbox"
+                                checked={filters.amenities.includes(amenity)}
+                                onChange={() => toggleAmenity(amenity)}
+                                className="mr-2 rounded border-gray-300"
+                              />
+                              <span className="text-sm text-gray-700">{amenity}</span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Hotel Type Filter */}
+                  <div>
+                    <h3 className="font-medium text-gray-900 mb-3">Hotel Type</h3>
                     <div className="space-y-2">
-                      {Object.entries(filterData.allAmenities).slice(0, 8).map(([amenity, count]) => (
+                      {['Budget', 'Standard', 'Luxury'].map(type => (
                         <div
-                          key={amenity}
-                          className={`flex items-center p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${filters.amenities.includes(amenity) ? "bg-blue-50 border border-blue-200" : ""
-                            }`}
-                          onClick={() => toggleAmenity(amenity)}
+                          key={type}
+                          className={`flex items-center p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${filters.hotelTypes.includes(type) ? "bg-blue-50 border border-blue-200" : ""}`}
                         >
                           <input
                             type="checkbox"
-                            checked={filters.amenities.includes(amenity)}
-                            onChange={() => toggleAmenity(amenity)}
+                            checked={filters.hotelTypes.includes(type)}
+                            onChange={() => {
+                              setFilters(prev => ({
+                                ...prev,
+                                hotelTypes: prev.hotelTypes.includes(type)
+                                  ? prev.hotelTypes.filter(t => t !== type)
+                                  : [...prev.hotelTypes, type],
+                              }));
+                            }}
                             className="mr-3 rounded border-gray-300"
                           />
-                          <span className="text-sm text-gray-700">{amenity}</span>
+                          <span className="text-sm text-gray-700">{type}</span>
                         </div>
                       ))}
                     </div>
@@ -393,7 +341,11 @@ export default function HotelsPage() {
               {displayedHotels.length === 0 ? (
                 <div className="text-center py-12">
                   <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No hotels found</h3>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    {filters.location
+                      ? `No hotels found for location "${filters.location}".`
+                      : 'No hotels found'}
+                  </h3>
                   <p className="text-gray-600">Try adjusting your filters to see more results.</p>
                 </div>
               ) : (

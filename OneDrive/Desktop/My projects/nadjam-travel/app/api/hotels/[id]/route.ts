@@ -104,6 +104,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
             amenities: Array.isArray(hotelData.amenities)
                 ? hotelData.amenities
                 : (typeof hotelData.amenities === 'string' ? hotelData.amenities.split(',').map((a: string) => a.trim()) : []),
+            types: Array.isArray(hotelData.types) ? hotelData.types : [],
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         };
         if (imageUrl) {
