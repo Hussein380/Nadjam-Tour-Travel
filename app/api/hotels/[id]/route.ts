@@ -32,7 +32,7 @@ async function uploadToCloudinary(file: File): Promise<string> {
 }
 
 export async function GET(req: NextRequest, context: { params: { id: string } }) {
-    const { params } = context;
+    const { params } = await context;
     try {
         // Standardized authentication block
         const token = req.headers.get('Authorization')?.split('Bearer ')[1];
