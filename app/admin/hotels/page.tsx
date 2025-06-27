@@ -184,6 +184,9 @@ export default function AdminHotelsPage() {
                                 <div className="flex-1 mr-2">
                                     <CardTitle className="text-lg leading-tight">{hotel.name}</CardTitle>
                                     <p className="text-gray-500 text-sm mt-1">{hotel.location}</p>
+                                    {hotel.description && (
+                                        <p className="text-gray-700 text-sm mt-1 line-clamp-2">{hotel.description}</p>
+                                    )}
                                 </div>
                                 <div className="flex items-center space-x-2">
                                     <Switch

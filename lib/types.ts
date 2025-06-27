@@ -16,7 +16,13 @@ export interface Hotel {
     active: boolean;
     createdAt: Date;
     updatedAt: Date;
-    types?: string[];
+    types?: ("Budget" | "Standard" | "Luxury")[];
+    propertyHighlights?: string[];
+    leisureActivities?: string[];
+    nearbyAttractions?: string[];
+    roomTypes?: any[];
+    reviewsList?: any[];
+    mapEmbedUrl?: string;
 }
 
 export interface Package {

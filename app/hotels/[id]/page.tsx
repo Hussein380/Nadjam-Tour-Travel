@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import { Swiper, SwiperSlide } from "swiper/react";
-import SwiperCore, { Navigation, Pagination } from "swiper";
+import { Navigation, Pagination } from "swiper/modules";
+import SwiperCore from "swiper";
+SwiperCore.use([Navigation, Pagination]);
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
-
-SwiperCore.use([Navigation, Pagination]);
+import { Button } from "@/components/ui/button";
+import BookingFormModal from "@/components/BookingFormModal";
 
 export default function HotelDetailsPage() {
     const params = useParams();
@@ -17,6 +19,7 @@ export default function HotelDetailsPage() {
     const [hotel, setHotel] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [bookingModalOpen, setBookingModalOpen] = useState(false);
 
     useEffect(() => {
         if (!hotelId) return;
@@ -77,11 +80,11 @@ export default function HotelDetailsPage() {
                 )}
             </div>
             {/* Hotel Info */}
-            <div className="mb-4">
+            <div className="mb-6">
                 <h2 className="text-xl font-semibold mb-2">Description</h2>
                 <p>{hotel.description}</p>
             </div>
-            <div className="mb-4">
+            <div className="mb-6">
                 <h2 className="text-xl font-semibold mb-2">Amenities</h2>
                 <ul className="flex flex-wrap gap-2">
                     {hotel.amenities && hotel.amenities.map((a, i) => (
@@ -89,17 +92,98 @@ export default function HotelDetailsPage() {
                     ))}
                 </ul>
             </div>
-            <div className="mb-4">
+            <div className="mb-6">
                 <span className="text-lg font-bold text-green-700 mr-2">${hotel.price}</span>
                 <span className="text-gray-500 line-through">${hotel.originalPrice}</span>
                 {hotel.discount > 0 && (
                     <span className="ml-2 text-red-500 font-semibold">-{hotel.discount}%</span>
                 )}
             </div>
-            <div className="mb-4">
+            <div className="mb-6">
                 <span className="text-yellow-500 font-bold">★ {hotel.rating}</span>
                 <span className="ml-2 text-gray-600">({hotel.reviews} reviews)</span>
             </div>
+
+            {/* Property Highlights (optional) */}
+            {hotel.propertyHighlights && hotel.propertyHighlights.length > 0 && (
+                <div className="mb-6">
+                    <h2 className="text-xl font-semibold mb-2">Property Highlights</h2>
+                    <ul className="list-disc list-inside text-gray-700">
+                        {hotel.propertyHighlights.map((h, i) => (
+                            <li key={i}>{h}</li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+            {/* Leisure & Activities (optional) */}
+            {hotel.leisureActivities && hotel.leisureActivities.length > 0 && (
+                <div className="mb-6">
+                    <h2 className="text-xl font-semibold mb-2">Leisure & Activities</h2>
+                    <ul className="list-disc list-inside text-gray-700">
+                        {hotel.leisureActivities.map((a, i) => (
+                            <li key={i}>{a}</li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+            {/* Nearby Attractions (optional) */}
+            {hotel.nearbyAttractions && hotel.nearbyAttractions.length > 0 && (
+                <div className="mb-6">
+                    <h2 className="text-xl font-semibold mb-2">Nearby Attractions</h2>
+                    <ul className="list-disc list-inside text-gray-700">
+                        {hotel.nearbyAttractions.map((a, i) => (
+                            <li key={i}>{a}</li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+            {/* Room Types & Prices (optional placeholder) */}
+            {hotel.roomTypes && hotel.roomTypes.length > 0 && (
+                <div className="mb-6">
+                    <h2 className="text-xl font-semibold mb-2">Room Types & Prices</h2>
+                    {/* TODO: Render room types and prices in a table or cards */}
+                    <div className="text-gray-500">Room types and prices coming soon...</div>
+                </div>
+            )}
+            {/* Guest Reviews (optional placeholder) */}
+            {hotel.reviewsList && hotel.reviewsList.length > 0 && (
+                <div className="mb-6">
+                    <h2 className="text-xl font-semibold mb-2">Guest Reviews</h2>
+                    {/* TODO: Render guest reviews */}
+                    <div className="text-gray-500">Guest reviews coming soon...</div>
+                </div>
+            )}
+            {/* Map/Location (optional placeholder) */}
+            {hotel.mapEmbedUrl && (
+                <div className="mb-6">
+                    <h2 className="text-xl font-semibold mb-2">Location</h2>
+                    {/* TODO: Render map embed */}
+                    <iframe
+                        src={hotel.mapEmbedUrl}
+                        width="100%"
+                        height="300"
+                        style={{ border: 0 }}
+                        allowFullScreen={true}
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                        className="rounded-lg"
+                    ></iframe>
+                </div>
+            )}
+            {/* Book Now Button */}
+            <div className="flex justify-center mt-8">
+                <Button
+                    className="bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white px-8 py-3 text-lg font-semibold"
+                    onClick={() => setBookingModalOpen(true)}
+                >
+                    Book Now
+                </Button>
+            </div>
+            <BookingFormModal
+                open={bookingModalOpen}
+                onClose={() => setBookingModalOpen(false)}
+                hotelName={hotel.name}
+            />
         </div>
     );
 } 

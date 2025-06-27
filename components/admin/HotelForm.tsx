@@ -35,12 +35,6 @@ const formSchema = z.object({
     name: z.string().min(2, 'Name must be at least 2 characters.'),
     location: z.string().min(2, 'Location is required.'),
     description: z.string().min(10, 'Description must be at least 10 characters.'),
-    // image: z
-    //     .any()
-    //     .refine((file) => file instanceof File || file === undefined, {
-    //         message: 'Input must be a valid image file',
-    //     })
-    //     .optional(),
     amenities: z.string().min(1, 'Please list at least one amenity.'),
     category: z.string().min(2, 'Category is required.'),
     price: z.coerce.number().min(0, 'Price must be a positive number.'),
@@ -51,6 +45,12 @@ const formSchema = z.object({
     featured: z.boolean().default(false),
     active: z.boolean().default(true),
     types: z.array(z.enum(['Budget', 'Standard', 'Luxury'])).min(1, 'Select at least one hotel type.'),
+    propertyHighlights: z.string().optional(),
+    leisureActivities: z.string().optional(),
+    nearbyAttractions: z.string().optional(),
+    roomTypes: z.string().optional(),
+    reviewsList: z.string().optional(),
+    mapEmbedUrl: z.string().optional(),
 });
 
 type HotelFormValues = z.infer<typeof formSchema>;
@@ -71,13 +71,17 @@ export default function HotelForm({ initialData }: HotelFormProps) {
         defaultValues: initialData ? {
             ...initialData,
             amenities: initialData.amenities.join(', '),
-            types: initialData.types || [],
-            // image: undefined,
+            types: (initialData.types?.filter((t: any) => ['Budget', 'Standard', 'Luxury'].includes(t)) as ("Budget" | "Standard" | "Luxury")[]) || [],
+            propertyHighlights: initialData.propertyHighlights?.join(', ') || '',
+            leisureActivities: initialData.leisureActivities?.join(', ') || '',
+            nearbyAttractions: initialData.nearbyAttractions?.join(', ') || '',
+            roomTypes: initialData.roomTypes ? JSON.stringify(initialData.roomTypes, null, 2) : '',
+            reviewsList: initialData.reviewsList ? JSON.stringify(initialData.reviewsList, null, 2) : '',
+            mapEmbedUrl: initialData.mapEmbedUrl || '',
         } : {
             name: '',
             location: '',
             description: '',
-            // image: undefined,
             amenities: '',
             category: 'Boutique',
             price: 100,
@@ -88,6 +92,12 @@ export default function HotelForm({ initialData }: HotelFormProps) {
             featured: false,
             active: true,
             types: [],
+            propertyHighlights: '',
+            leisureActivities: '',
+            nearbyAttractions: '',
+            roomTypes: '',
+            reviewsList: '',
+            mapEmbedUrl: '',
         },
     });
 
@@ -97,6 +107,13 @@ export default function HotelForm({ initialData }: HotelFormProps) {
             form.reset({
                 ...initialData,
                 amenities: initialData.amenities.join(', '),
+                types: (initialData.types?.filter((t: any) => ['Budget', 'Standard', 'Luxury'].includes(t)) as ("Budget" | "Standard" | "Luxury")[]) || [],
+                propertyHighlights: initialData.propertyHighlights?.join(', ') || '',
+                leisureActivities: initialData.leisureActivities?.join(', ') || '',
+                nearbyAttractions: initialData.nearbyAttractions?.join(', ') || '',
+                roomTypes: initialData.roomTypes ? JSON.stringify(initialData.roomTypes, null, 2) : '',
+                reviewsList: initialData.reviewsList ? JSON.stringify(initialData.reviewsList, null, 2) : '',
+                mapEmbedUrl: initialData.mapEmbedUrl || '',
             });
         }
     }, [initialData, form]);
@@ -162,6 +179,12 @@ export default function HotelForm({ initialData }: HotelFormProps) {
                 image: allImages[0] || '',
                 amenities: values.amenities.split(',').map((a: string) => a.trim()),
                 types: values.types,
+                propertyHighlights: values.propertyHighlights?.split(',').map((a: string) => a.trim()) || [],
+                leisureActivities: values.leisureActivities?.split(',').map((a: string) => a.trim()) || [],
+                nearbyAttractions: values.nearbyAttractions?.split(',').map((a: string) => a.trim()) || [],
+                roomTypes: values.roomTypes ? JSON.parse(values.roomTypes) : [],
+                reviewsList: values.reviewsList ? JSON.parse(values.reviewsList) : [],
+                mapEmbedUrl: values.mapEmbedUrl,
             };
             const response = await fetch(url, {
                 method,
@@ -380,14 +403,14 @@ export default function HotelForm({ initialData }: HotelFormProps) {
                         <FormItem>
                             <FormLabel>Hotel Type</FormLabel>
                             <div className="flex gap-4">
-                                {['Budget', 'Standard', 'Luxury'].map((type) => (
+                                {(['Budget', 'Standard', 'Luxury'] as const).map((type) => (
                                     <label key={type} className="flex items-center gap-2 cursor-pointer">
                                         <input
                                             type="checkbox"
                                             checked={field.value.includes(type)}
                                             onChange={() => {
                                                 if (field.value.includes(type)) {
-                                                    field.onChange(field.value.filter((t: string) => t !== type));
+                                                    field.onChange(field.value.filter((t: typeof type) => t !== type));
                                                 } else {
                                                     field.onChange([...field.value, type]);
                                                 }
@@ -532,6 +555,91 @@ export default function HotelForm({ initialData }: HotelFormProps) {
                         )}
                     />
                 </div>
+                {/* --- New Optional Sections --- */}
+                <FormField
+                    control={form.control}
+                    name="propertyHighlights"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Property Highlights (optional)</FormLabel>
+                            <FormControl>
+                                <Textarea rows={2} placeholder="e.g., Top Location, Free Private Parking" {...field} />
+                            </FormControl>
+                            <FormDescription>Comma-separated list of highlights (e.g., Top Location, Free Private Parking).</FormDescription>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="leisureActivities"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Leisure & Activities (optional)</FormLabel>
+                            <FormControl>
+                                <Textarea rows={2} placeholder="e.g., Yoga, Spa, Kids Playground" {...field} />
+                            </FormControl>
+                            <FormDescription>Comma-separated list of activities (e.g., Yoga, Spa, Kids Playground).</FormDescription>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="nearbyAttractions"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Nearby Attractions (optional)</FormLabel>
+                            <FormControl>
+                                <Textarea rows={2} placeholder="e.g., National Park, Beach, Museum" {...field} />
+                            </FormControl>
+                            <FormDescription>Comma-separated list of attractions (e.g., National Park, Beach, Museum).</FormDescription>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="roomTypes"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Room Types & Prices (optional, JSON)</FormLabel>
+                            <FormControl>
+                                <Textarea rows={3} placeholder='e.g., [{"type":"Deluxe","beds":"1 king","price":120}]' {...field} />
+                            </FormControl>
+                            <FormDescription>Enter an array of objects: <code>[{'{"type":"Deluxe","beds":"1 king","price":120}'}]</code></FormDescription>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="reviewsList"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Guest Reviews (optional, JSON)</FormLabel>
+                            <FormControl>
+                                <Textarea rows={3} placeholder='e.g., [{"name":"John","rating":5,"comment":"Great stay!"}]' {...field} />
+                            </FormControl>
+                            <FormDescription>Enter an array of objects: <code>[{'{"name":"John","rating":5,"comment":"Great stay!"}'}]</code></FormDescription>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="mapEmbedUrl"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Map Embed URL (optional)</FormLabel>
+                            <FormControl>
+                                <Input placeholder="Paste Google Maps embed URL here" {...field} />
+                            </FormControl>
+                            <FormDescription>Paste the Google Maps embed URL for this hotel location.</FormDescription>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
                 <Button type="submit" disabled={isSubmitting}>
                     {isSubmitting ? 'Saving...' : (initialData ? 'Save Changes' : 'Create Hotel')}
                 </Button>

@@ -15,6 +15,7 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import BookingFormModal from '@/components/BookingFormModal';
 import { Hotel } from '@/lib/types';
+import Link from "next/link";
 
 export default function HotelsPage() {
   const [allHotels, setAllHotels] = useState<Hotel[]>([]);
@@ -352,120 +353,118 @@ export default function HotelsPage() {
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {displayedHotels.map((hotel) => (
-                      <Card
-                        key={hotel.id}
-                        className="overflow-hidden group hover:shadow-xl transition-all duration-300 border-0 shadow-lg"
-                      >
-                        <div className="relative h-64 overflow-hidden">
-                          {hotel.images && hotel.images.length > 0 ? (
-                            <>
-                              <Swiper
-                                modules={[Navigation, Pagination]}
-                                navigation
-                                pagination={{ clickable: true }}
-                                spaceBetween={16}
-                                slidesPerView={1}
-                                className="rounded-t-lg overflow-hidden h-full"
-                              >
-                                {hotel.images.map((url, idx) => (
-                                  <SwiperSlide key={idx}>
-                                    <div className="relative w-full h-64">
-                                      <Image
-                                        src={url}
-                                        alt={`Hotel image ${idx + 1}`}
-                                        fill
-                                        className="object-cover"
-                                      />
-                                    </div>
-                                  </SwiperSlide>
-                                ))}
-                              </Swiper>
-                              {hotel.images.length > 1 && (
-                                <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded z-20 select-none pointer-events-none">
-                                  Swipe or click arrows to see more
-                                </div>
-                              )}
-                            </>
-                          ) : (
-                            <Image
-                              src={hotel.image || "/placeholder.svg"}
-                              alt={hotel.name}
-                              fill
-                              className="object-cover group-hover:scale-110 transition-transform duration-500"
-                            />
-                          )}
-                          <div className="absolute top-4 left-4">
-                            <Badge className="bg-red-500 text-white font-medium">{hotel.discount}% OFF</Badge>
-                          </div>
-                          <div className="absolute top-4 right-4">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="bg-white/20 backdrop-blur-sm text-white hover:bg-white/30"
-                            >
-                              <Heart className="w-4 h-4" />
-                            </Button>
-                          </div>
-                          <div className="absolute bottom-4 left-4">
-                            <Badge variant="secondary" className="bg-white/90 text-gray-900">
-                              {hotel.category}
-                            </Badge>
-                          </div>
-                        </div>
-
-                        <CardContent className="p-6">
-                          <div className="flex items-start justify-between mb-3">
-                            <div>
-                              <h3 className="text-xl font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
-                                {hotel.name}
-                              </h3>
-                              <div className="flex items-center text-gray-600 mb-2">
-                                <MapPin className="w-4 h-4 mr-1" />
-                                <span className="text-sm">{hotel.location}</span>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <div className="flex items-center mb-1">
-                                <Star className="w-4 h-4 text-yellow-400 fill-current mr-1" />
-                                <span className="font-medium">{hotel.rating}</span>
-                                <span className="text-sm text-gray-500 ml-1">({hotel.reviews})</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <p className="text-gray-600 text-sm mb-4 leading-relaxed">{hotel.description}</p>
-
-                          <div className="flex flex-wrap gap-2 mb-4">
-                            {hotel.amenities.slice(0, 4).map((amenity, index) => (
-                              <Badge key={index} variant="outline" className="text-xs">
-                                {amenity}
-                              </Badge>
-                            ))}
-                            {hotel.amenities.length > 4 && (
-                              <Badge variant="outline" className="text-xs">
-                                +{hotel.amenities.length - 4} more
-                              </Badge>
+                      <Link key={hotel.id} href={`/hotels/${hotel.id}`} className="block group focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 border-0 shadow-lg cursor-pointer">
+                          <div className="relative h-64 overflow-hidden">
+                            {hotel.images && hotel.images.length > 0 ? (
+                              <>
+                                <Swiper
+                                  modules={[Navigation, Pagination]}
+                                  navigation
+                                  pagination={{ clickable: true }}
+                                  spaceBetween={16}
+                                  slidesPerView={1}
+                                  className="rounded-t-lg overflow-hidden h-full"
+                                >
+                                  {hotel.images.map((url, idx) => (
+                                    <SwiperSlide key={idx}>
+                                      <div className="relative w-full h-64">
+                                        <Image
+                                          src={url}
+                                          alt={`Hotel image ${idx + 1}`}
+                                          fill
+                                          className="object-cover"
+                                        />
+                                      </div>
+                                    </SwiperSlide>
+                                  ))}
+                                </Swiper>
+                                {hotel.images.length > 1 && (
+                                  <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded z-20 select-none pointer-events-none">
+                                    Swipe or click arrows to see more
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                              <Image
+                                src={hotel.image || "/placeholder.svg"}
+                                alt={hotel.name}
+                                fill
+                                className="object-cover group-hover:scale-110 transition-transform duration-500"
+                              />
                             )}
-                          </div>
-
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              <span className="text-sm text-gray-500 line-through">${hotel.originalPrice}</span>
-                              <span className="text-2xl font-bold text-gray-900">${hotel.price}</span>
-                              <span className="text-sm text-gray-500">per night</span>
+                            <div className="absolute top-4 left-4">
+                              <Badge className="bg-red-500 text-white font-medium">{hotel.discount}% OFF</Badge>
                             </div>
-                            <Button
-                              className="bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white"
-                              onClick={() => {
-                                setSelectedHotelName(hotel.name);
-                                setBookingModalOpen(true);
-                              }}
-                            >
-                              Book Now
-                            </Button>
+                            <div className="absolute top-4 right-4">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="bg-white/20 backdrop-blur-sm text-white hover:bg-white/30"
+                                tabIndex={-1}
+                                type="button"
+                                onClick={e => e.preventDefault()}
+                              >
+                                <Heart className="w-4 h-4" />
+                              </Button>
+                            </div>
+                            <div className="absolute bottom-4 left-4">
+                              <Badge variant="secondary" className="bg-white/90 text-gray-900">
+                                {hotel.category}
+                              </Badge>
+                            </div>
                           </div>
-                        </CardContent>
-                      </Card>
+                          <CardContent className="p-6">
+                            <div className="flex items-start justify-between mb-3">
+                              <div>
+                                <h3 className="text-xl font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
+                                  {hotel.name}
+                                </h3>
+                                <div className="flex items-center text-gray-600 mb-2">
+                                  <MapPin className="w-4 h-4 mr-1" />
+                                  <span className="text-sm">{hotel.location}</span>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className="flex items-center mb-1">
+                                  <Star className="w-4 h-4 text-yellow-400 fill-current mr-1" />
+                                  <span className="font-medium">{hotel.rating}</span>
+                                  <span className="text-sm text-gray-500 ml-1">({hotel.reviews})</span>
+                                </div>
+                              </div>
+                            </div>
+                            <p className="text-gray-600 text-sm mb-4 leading-relaxed line-clamp-2">{hotel.description}</p>
+                            <div className="flex flex-wrap gap-2 mb-4">
+                              {hotel.amenities.slice(0, 4).map((amenity, index) => (
+                                <Badge key={index} variant="outline" className="text-xs">
+                                  {amenity}
+                                </Badge>
+                              ))}
+                              {hotel.amenities.length > 4 && (
+                                <Badge variant="outline" className="text-xs">
+                                  +{hotel.amenities.length - 4} more
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-2">
+                                <span className="text-sm text-gray-500 line-through">${hotel.originalPrice}</span>
+                                <span className="text-2xl font-bold text-gray-900">${hotel.price}</span>
+                                <span className="text-sm text-gray-500">per night</span>
+                              </div>
+                              <Link href={`/hotels/${hotel.id}`}>
+                                <Button
+                                  className="bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white"
+                                  tabIndex={0}
+                                  type="button"
+                                >
+                                  View More
+                                </Button>
+                              </Link>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </Link>
                     ))}
                   </div>
 

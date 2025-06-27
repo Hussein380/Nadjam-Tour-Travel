@@ -32,15 +32,9 @@ async function uploadToCloudinary(file: File): Promise<string> {
 }
 
 export async function GET(req: NextRequest, context: { params: { id: string } }) {
-    const { params } = await context;
+    const { params } = context;
     try {
-        // Standardized authentication block
-        const token = req.headers.get('Authorization')?.split('Bearer ')[1];
-        if (!token) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
-        await admin.auth().verifyIdToken(token);
-
+        // Public GET: do not require authentication
         const doc = await db.collection('hotels').doc(params.id).get();
 
         if (!doc.exists) {

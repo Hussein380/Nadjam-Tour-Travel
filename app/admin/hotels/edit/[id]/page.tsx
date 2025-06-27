@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import React from 'react';
 import HotelForm from '@/components/admin/HotelForm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Hotel } from '@/lib/types';
