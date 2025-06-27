@@ -54,7 +54,7 @@ export async function GET(req: NextRequest, context: { params: { id: string } })
     }
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, context: { params: { id: string } }) {
     try {
         const token = req.headers.get('Authorization')?.split('Bearer ')[1];
         if (!token) {
@@ -105,13 +105,15 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
             finalHotelData.image = imageUrl;
         }
 
+        // Fix for Next.js 15+ params
+        const params = await (context.params instanceof Promise ? context.params : Promise.resolve(context.params));
         const hotelId = params.id;
         await db.collection('hotels').doc(hotelId).update(finalHotelData);
 
         return NextResponse.json({ message: 'Hotel updated successfully!' }, { status: 200 });
 
     } catch (error: any) {
-        console.error(`Error updating hotel ${params.id}:`, error);
+        console.error(`Error updating hotel ${context.params.id}:`, error);
         if (error.code === 'auth/id-token-expired') {
             return NextResponse.json({ error: 'Authentication token has expired. Please log in again.' }, { status: 401 });
         }

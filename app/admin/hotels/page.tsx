@@ -17,11 +17,17 @@ import { Navigation, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 export default function AdminHotelsPage() {
     const [hotels, setHotels] = useState<Hotel[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [confirmDialog, setConfirmDialog] = useState<{
+        open: boolean;
+        type: 'delete' | 'deactivate' | null;
+        hotel: Hotel | null;
+    }>({ open: false, type: null, hotel: null });
 
     useEffect(() => {
         fetchHotels();
@@ -31,8 +37,8 @@ export default function AdminHotelsPage() {
         setLoading(true);
         setError('');
         try {
-            // Fetch only active hotels
-            const response = await fetch('/api/hotels?active=true');
+            // Fetch all hotels, not just active
+            const response = await fetch('/api/hotels');
             if (response.ok) {
                 const data = await response.json();
                 setHotels(data);
@@ -60,20 +66,21 @@ export default function AdminHotelsPage() {
     };
 
     const handleUpdate = async (id: string, updates: Partial<Hotel>) => {
+        // Only show confirm dialog for deactivation
         if (updates.active === false) {
-            const confirmDeactivate = window.confirm('Are you sure you want to deactivate this hotel?');
-            if (!confirmDeactivate) return;
+            const hotel = hotels.find(h => h.id === id) || null;
+            setConfirmDialog({ open: true, type: 'deactivate', hotel });
+            return;
         }
+        // For featured toggle or reactivation, just update
         const token = await getAuthToken();
         if (!token) return;
-
         try {
             const response = await fetch(`/api/hotels/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                 body: JSON.stringify(updates),
             });
-
             if (response.ok) {
                 toast.success('Hotel updated successfully!');
                 fetchHotels();
@@ -87,28 +94,57 @@ export default function AdminHotelsPage() {
     };
 
     const handleDelete = async (id: string) => {
-        const confirmDelete = window.confirm('Are you sure you want to permanently delete this hotel? This action cannot be undone.');
-        if (!confirmDelete) return;
+        const hotel = hotels.find(h => h.id === id) || null;
+        setConfirmDialog({ open: true, type: 'delete', hotel });
+    };
 
-        const token = await getAuthToken();
-        if (!token) return;
-
-        try {
-            const response = await fetch(`/api/hotels/${id}`, {
-                method: 'DELETE',
-                headers: { Authorization: `Bearer ${token}` },
-            });
-
-            if (response.ok) {
-                toast.success('Hotel deleted successfully!');
-                fetchHotels();
-            } else {
-                const errorData = await response.json();
-                toast.error(errorData.error || 'Failed to delete hotel.');
+    // ConfirmDialog handlers
+    const handleConfirm = async () => {
+        if (!confirmDialog.hotel) return;
+        if (confirmDialog.type === 'delete') {
+            // Actually delete
+            const token = await getAuthToken();
+            if (!token) return;
+            try {
+                const response = await fetch(`/api/hotels/${confirmDialog.hotel.id}`, {
+                    method: 'DELETE',
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (response.ok) {
+                    toast.success('Hotel deleted successfully!');
+                    fetchHotels();
+                } else {
+                    const errorData = await response.json();
+                    toast.error(errorData.error || 'Failed to delete hotel.');
+                }
+            } catch (error) {
+                toast.error('An error occurred while deleting the hotel.');
             }
-        } catch (error) {
-            toast.error('An error occurred while deleting the hotel.');
+        } else if (confirmDialog.type === 'deactivate') {
+            // Actually deactivate
+            const token = await getAuthToken();
+            if (!token) return;
+            try {
+                const response = await fetch(`/api/hotels/${confirmDialog.hotel.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ active: false }),
+                });
+                if (response.ok) {
+                    toast.success('Hotel deactivated successfully!');
+                    fetchHotels();
+                } else {
+                    const errorData = await response.json();
+                    toast.error(errorData.error || 'Failed to deactivate hotel.');
+                }
+            } catch (error) {
+                toast.error('An error occurred while deactivating the hotel.');
+            }
         }
+        setConfirmDialog({ open: false, type: null, hotel: null });
+    };
+    const handleCancel = () => {
+        setConfirmDialog({ open: false, type: null, hotel: null });
     };
 
     if (loading) {
@@ -192,7 +228,7 @@ export default function AdminHotelsPage() {
                                     <Switch
                                         id={`featured-${hotel.id}`}
                                         checked={hotel.featured}
-                                        onCheckedChange={() => handleUpdate(hotel.id, { featured: !hotel.featured })}
+                                        onCheckedChange={() => handleUpdate(hotel.id, { featured: !hotel.featured, active: hotel.active })}
                                     />
                                     <label htmlFor={`featured-${hotel.id}`}>
                                         <Star className={`w-4 h-4 transition-colors ${hotel.featured ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
@@ -213,13 +249,23 @@ export default function AdminHotelsPage() {
                             </div>
                         </CardContent>
                         <div className="border-t p-4 flex justify-between items-center bg-gray-50">
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleUpdate(hotel.id, { active: !hotel.active })}
-                            >
-                                {hotel.active ? 'Deactivate' : 'Activate'}
-                            </Button>
+                            {hotel.active ? (
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleUpdate(hotel.id, { active: false })}
+                                >
+                                    Deactivate
+                                </Button>
+                            ) : (
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleUpdate(hotel.id, { active: true })}
+                                >
+                                    Reactivate
+                                </Button>
+                            )}
                             <div className="flex items-center space-x-2">
                                 <Button asChild size="icon" variant="ghost">
                                     <Link href={`/admin/hotels/edit/${hotel.id}`}>
@@ -252,6 +298,18 @@ export default function AdminHotelsPage() {
                     </Button>
                 </div>
             )}
+
+            <ConfirmDialog
+                open={confirmDialog.open}
+                title={confirmDialog.type === 'delete' ? 'Delete Hotel?' : 'Deactivate Hotel?'}
+                description={confirmDialog.type === 'delete'
+                    ? `Are you sure you want to permanently delete "${confirmDialog.hotel?.name}"? This action cannot be undone.`
+                    : `Are you sure you want to deactivate "${confirmDialog.hotel?.name}"? The hotel will no longer be visible to users.`}
+                confirmText={confirmDialog.type === 'delete' ? 'Delete' : 'Deactivate'}
+                cancelText="Cancel"
+                onConfirm={handleConfirm}
+                onCancel={handleCancel}
+            />
         </div>
     );
 } 
