@@ -25,106 +25,97 @@ const quickSuggestions = [
   "💰 Best travel deals",
 ]
 
-const initialBotMessage: Message = {
+const BOT_NAME = "NadjamTravel AI"
+const BOT_AVATAR = <Bot className="w-4 h-4" />
+const THEME_COLOR = "from-blue-900 to-blue-700"
+const DEFAULT_LANGUAGE = "en"
+
+const initialBotMessage = (lang: string): Message => ({
   id: "1",
   type: "bot",
-  content: "Hello! I'm Nadjam AI, your personal travel assistant. How can I help you plan your perfect trip today?",
+  content: lang === "sw" ?
+    "Habari! Mimi ni NadjamTravel AI, msaidizi wako wa kusafiri. Naweza kukusaidiaje leo?" :
+    "Hello! I'm NadjamTravel AI, your personal travel assistant. How can I help you today?",
   timestamp: new Date(),
   suggestions: quickSuggestions,
-}
+})
 
 export function ChatBot() {
   const [isOpen, setIsOpen] = useState(false)
   const [isMinimized, setIsMinimized] = useState(false)
-  const [messages, setMessages] = useState<Message[]>([initialBotMessage])
+  const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState("")
   const [isTyping, setIsTyping] = useState(false)
+  const [language, setLanguage] = useState(DEFAULT_LANGUAGE)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  // Load chat history from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem("nadjam_chat_history")
+    const lang = localStorage.getItem("nadjam_chat_lang") || DEFAULT_LANGUAGE
+    setLanguage(lang)
+    if (saved) {
+      // Parse and convert timestamps to Date objects
+      const parsed = JSON.parse(saved).map((msg: any) => ({
+        ...msg,
+        timestamp: new Date(msg.timestamp),
+      }))
+      setMessages(parsed)
+    } else {
+      setMessages([initialBotMessage(lang)])
+    }
+  }, [])
+
+  // Save chat history to localStorage
+  useEffect(() => {
+    localStorage.setItem("nadjam_chat_history", JSON.stringify(messages))
+  }, [messages])
+  useEffect(() => {
+    localStorage.setItem("nadjam_chat_lang", language)
+  }, [language])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
-
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages])
-
-  useEffect(() => {
-    if (isOpen && !isMinimized) {
-      inputRef.current?.focus()
-    }
-  }, [isOpen, isMinimized])
-
-  const generateBotResponse = (userMessage: string): Message => {
-    const lowerMessage = userMessage.toLowerCase()
-
-    let response = ""
-    let suggestions: string[] = []
-
-    if (lowerMessage.includes("hotel") || lowerMessage.includes("accommodation")) {
-      response =
-        "I'd be happy to help you find the perfect hotel! 🏨 We have amazing properties across Kenya including luxury safari lodges, beach resorts, and city hotels. Which destination are you interested in?"
-      suggestions = ["Nairobi hotels", "Mombasa beach resorts", "Maasai Mara lodges", "Show all hotels"]
-    } else if (lowerMessage.includes("flight") || lowerMessage.includes("fly")) {
-      response =
-        "Great choice! ✈️ We offer flights to amazing destinations worldwide. Our popular routes include Dubai, Istanbul, London, and Paris. Where would you like to fly to?"
-      suggestions = ["Nairobi to Dubai", "Mombasa to Istanbul", "Flight deals", "All destinations"]
-    } else if (lowerMessage.includes("safari") || lowerMessage.includes("package")) {
-      response =
-        "Safari adventures are our specialty! 🦁 We offer incredible packages including the Great Migration, Big Five safaris, and luxury eco-lodges. What type of experience are you looking for?"
-      suggestions = ["Kenya Safari", "Tanzania Safari", "Luxury packages", "Budget packages"]
-    } else if (lowerMessage.includes("hajj") || lowerMessage.includes("umrah")) {
-      response =
-        "We provide comprehensive Hajj & Umrah services with experienced guides and comfortable accommodations. 🕌 Our packages include flights, visas, hotels, and spiritual guidance. Would you like to know more?"
-      suggestions = ["Hajj packages", "Umrah packages", "Package details", "Booking process"]
-    } else if (lowerMessage.includes("price") || lowerMessage.includes("cost") || lowerMessage.includes("deal")) {
-      response =
-        "We offer competitive prices and exclusive deals! 💰 Our packages start from $1,299 and we have special discounts up to 25% off. What type of trip are you planning?"
-      suggestions = ["Budget packages", "Luxury deals", "Group discounts", "Special offers"]
-    } else if (lowerMessage.includes("contact") || lowerMessage.includes("phone") || lowerMessage.includes("call")) {
-      response =
-        "You can reach us anytime! 📞 Call us at +254 706 686 349 or +254 729 884 108, email info@nadjamtravel.co.ke, or visit our office at 7th Street, Eastleigh, Nairobi."
-      suggestions = ["Call now", "Send email", "WhatsApp us", "Office location"]
-    } else {
-      response =
-        "Thank you for your message! I'm here to help you with hotels, flights, safari packages, Hajj & Umrah services, and any travel planning needs. What would you like to explore?"
-      suggestions = quickSuggestions
-    }
-
-    return {
-      id: Date.now().toString(),
-      type: "bot",
-      content: response,
-      timestamp: new Date(),
-      suggestions,
-    }
-  }
+  useEffect(() => { scrollToBottom() }, [messages])
+  useEffect(() => { if (isOpen && !isMinimized) inputRef.current?.focus() }, [isOpen, isMinimized])
 
   const handleSendMessage = async (message: string) => {
     if (!message.trim()) return
-
-    // Add user message
     const userMessage: Message = {
       id: Date.now().toString(),
       type: "user",
       content: message,
       timestamp: new Date(),
     }
-
     setMessages((prev) => [...prev, userMessage])
     setInputValue("")
     setIsTyping(true)
-
-    // Simulate typing delay
-    setTimeout(
-      () => {
-        const botResponse = generateBotResponse(message)
-        setMessages((prev) => [...prev, botResponse])
-        setIsTyping(false)
-      },
-      1000 + Math.random() * 1000,
-    )
+    try {
+      const res = await fetch("/api/chatbot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message, language }),
+      })
+      const data = await res.json()
+      const botMessage: Message = {
+        id: Date.now().toString() + "-bot",
+        type: "bot",
+        content: data.answer,
+        timestamp: new Date(),
+      }
+      setMessages((prev) => [...prev, botMessage])
+    } catch (err) {
+      setMessages((prev) => [...prev, {
+        id: Date.now().toString() + "-err",
+        type: "bot",
+        content: "Sorry, something went wrong. Please contact us directly.",
+        timestamp: new Date(),
+      }])
+    } finally {
+      setIsTyping(false)
+    }
   }
 
   const handleSuggestionClick = (suggestion: string) => {
@@ -136,6 +127,11 @@ export function ChatBot() {
       e.preventDefault()
       handleSendMessage(inputValue)
     }
+  }
+
+  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setLanguage(e.target.value)
+    setMessages([initialBotMessage(e.target.value)])
   }
 
   return (
@@ -201,18 +197,16 @@ export function ChatBot() {
                       className={`flex items-start space-x-2 max-w-[80%] ${message.type === "user" ? "flex-row-reverse space-x-reverse" : ""}`}
                     >
                       <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          message.type === "user"
-                            ? "bg-blue-600 text-white"
-                            : "bg-gradient-to-r from-purple-500 to-pink-500 text-white"
-                        }`}
+                        className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${message.type === "user"
+                          ? "bg-blue-600 text-white"
+                          : "bg-gradient-to-r from-purple-500 to-pink-500 text-white"
+                          }`}
                       >
                         {message.type === "user" ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
                       </div>
                       <div
-                        className={`rounded-lg p-3 ${
-                          message.type === "user" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-900"
-                        }`}
+                        className={`rounded-lg p-3 ${message.type === "user" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-900"
+                          }`}
                       >
                         <p className="text-sm leading-relaxed">{message.content}</p>
                         <p className="text-xs opacity-70 mt-1">

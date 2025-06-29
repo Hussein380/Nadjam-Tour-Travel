@@ -165,7 +165,7 @@ export default function PackagesPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <section className="relative h-[70vh] bg-gradient-to-br from-emerald-900 via-teal-800 to-cyan-700 overflow-hidden">
+      <section className="relative h-[70vh] bg-gradient-to-br from-blue-900 via-blue-800 to-teal-700 overflow-hidden">
         <div className="absolute inset-0 bg-black/30" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
 
@@ -268,7 +268,7 @@ export default function PackagesPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <Button className="h-12 bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700 text-white font-medium text-lg">
+                <Button className="h-12 bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white font-medium text-lg">
                   <Search className="w-5 h-5 mr-2" />
                   Search
                 </Button>
@@ -552,7 +552,7 @@ export default function PackagesPage() {
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-2">
                               <span className="text-sm text-gray-500 line-through">${pkg.originalPrice}</span>
-                              <span className="text-2xl font-bold text-emerald-600">${pkg.price}</span>
+                              <span className="text-2xl font-bold text-blue-600">${pkg.price}</span>
                               <span className="text-sm text-gray-500">per person</span>
                             </div>
                             <Button asChild className="bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700 text-white">

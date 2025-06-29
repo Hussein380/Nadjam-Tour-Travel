@@ -5,12 +5,13 @@ import { Navbar } from "@/components/Navbar"
 import { Footer } from "@/components/Footer"
 import ErrorBoundary from "@/components/ErrorBoundary"
 import { Toaster } from "@/components/ui/sonner"
+import { ChatBot } from "@/components/ChatBot"
 
 export const metadata: Metadata = {
   title: "Nadjam Tour & Travel - Discover Amazing Destinations",
   description:
     "Book your dream vacation with Nadjam Tour & Travel. Explore our curated travel packages and create unforgettable memories.",
-    generator: 'v0.dev'
+  generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -22,11 +23,12 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen bg-gray-50">
         <ErrorBoundary>
-        <Navbar />
-        <main className="min-h-screen">{children}</main>
-        <Footer />
+          <Navbar />
+          <main className="min-h-screen">{children}</main>
+          <Footer />
         </ErrorBoundary>
         <Toaster />
+        <ChatBot />
       </body>
     </html>
   )
