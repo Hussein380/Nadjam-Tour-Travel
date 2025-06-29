@@ -452,15 +452,17 @@ export default function HotelsPage() {
                                 <span className="text-2xl font-bold text-gray-900">${hotel.price}</span>
                                 <span className="text-sm text-gray-500">per night</span>
                               </div>
-                              <Link href={`/hotels/${hotel.id}`}>
-                                <Button
-                                  className="bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white"
-                                  tabIndex={0}
-                                  type="button"
-                                >
-                                  View More
-                                </Button>
-                              </Link>
+                              <Button
+                                className="bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white"
+                                tabIndex={0}
+                                type="button"
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  window.location.href = `/hotels/${hotel.id}`;
+                                }}
+                              >
+                                View More
+                              </Button>
                             </div>
                           </CardContent>
                         </Card>
