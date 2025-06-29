@@ -33,8 +33,6 @@ firebase-admin-key.json
 # Local scripts
 scripts/setAdmins.js
 
-# Ignore all JSON files at root (if you ever export more keys)
-*.json
 
 # Ignore Docs with secrets (if you ever add them)
 Docs/*.md
