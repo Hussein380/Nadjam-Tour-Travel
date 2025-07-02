@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useForm, FormProvider } from 'react-hook-form';
+import { useForm, FormProvider, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { toast } from 'sonner';
@@ -120,7 +120,45 @@ export default function HotelForm({ initialData }: HotelFormProps) {
 
     const { formState: { isSubmitting }, setValue } = form;
 
+    // --- propertyHighlights dynamic field array ---
+    // Parse initial value for propertyHighlights
+    useEffect(() => {
+        if (form.getValues('propertyHighlights') && typeof form.getValues('propertyHighlights') === 'string') {
+            const highlightsArr = form.getValues('propertyHighlights')
+                .split(',')
+                .map((h: string) => h.trim())
+                .filter((h: string) => h.length > 0);
+            form.setValue('propertyHighlights', highlightsArr);
+        }
+    }, []);
+    // UseFieldArray for propertyHighlights
+    const { fields: highlightFields, append: appendHighlight, remove: removeHighlight } = useFieldArray({
+        control: form.control,
+        name: 'propertyHighlights',
+    });
+
+    // --- roomTypes dynamic field array ---
+    // Parse initial value for roomTypes
+    useEffect(() => {
+        if (form.getValues('roomTypes') && typeof form.getValues('roomTypes') === 'string') {
+            try {
+                const arr = JSON.parse(form.getValues('roomTypes'));
+                if (Array.isArray(arr)) {
+                    form.setValue('roomTypes', arr);
+                }
+            } catch {
+                form.setValue('roomTypes', []);
+            }
+        }
+    }, []);
+    // UseFieldArray for roomTypes
+    const { fields: roomTypeFields, append: appendRoomType, remove: removeRoomType } = useFieldArray({
+        control: form.control,
+        name: 'roomTypes',
+    });
+
     const onSubmit = async (values: HotelFormValues) => {
+        console.log('HotelForm onSubmit triggered', values);
         try {
             const auth = getAuth();
             const user = auth.currentUser;
@@ -138,6 +176,7 @@ export default function HotelForm({ initialData }: HotelFormProps) {
                             maxWidthOrHeight: 1920,
                             useWebWorker: true,
                         });
+                        console.log('Compressed image:', compressed);
                         if (compressed.size > 10 * 1024 * 1024) {
                             toast.error('One of the images is still too large after compression (max 10MB).');
                             return;
@@ -145,6 +184,7 @@ export default function HotelForm({ initialData }: HotelFormProps) {
                         compressedFiles.push(compressed);
                     } catch (err) {
                         toast.error('Image compression failed.');
+                        console.error('Image compression error:', err);
                         return;
                     }
                 }
@@ -153,20 +193,35 @@ export default function HotelForm({ initialData }: HotelFormProps) {
                 compressedFiles.forEach((file, idx) => {
                     formData.append('images', file, file.name);
                 });
+                console.log('Uploading images to /api/upload', formData);
                 const uploadRes = await fetch('/api/upload', {
                     method: 'POST',
                     body: formData,
                 });
                 if (!uploadRes.ok) {
                     toast.error('Image upload failed.');
+                    console.error('Image upload failed:', uploadRes.status, await uploadRes.text());
                     return;
                 }
                 const uploadJson = await uploadRes.json();
                 uploadedImageUrls = uploadJson.urls || [];
+                console.log('Uploaded image URLs:', uploadedImageUrls);
                 if (!Array.isArray(uploadedImageUrls) || uploadedImageUrls.length !== compressedFiles.length) {
                     toast.error('Image upload failed: unexpected response.');
                     return;
                 }
+            }
+
+            // Convert propertyHighlights array to comma-separated string for backend
+            let highlights = values.propertyHighlights;
+            if (Array.isArray(highlights)) {
+                highlights = highlights.map((h: any) => (typeof h === 'string' ? h : h.value)).filter(Boolean).join(', ');
+            }
+
+            // Convert roomTypes array to JSON string for backend
+            let roomTypes = values.roomTypes;
+            if (Array.isArray(roomTypes)) {
+                roomTypes = JSON.stringify(roomTypes.filter(rt => rt.type && rt.beds && rt.price));
             }
 
             // 3. Submit hotel data with image URLs
@@ -179,13 +234,14 @@ export default function HotelForm({ initialData }: HotelFormProps) {
                 image: allImages[0] || '',
                 amenities: values.amenities.split(',').map((a: string) => a.trim()),
                 types: values.types,
-                propertyHighlights: values.propertyHighlights?.split(',').map((a: string) => a.trim()) || [],
+                propertyHighlights: highlights ? highlights.split(',').map((a: string) => a.trim()) : [],
                 leisureActivities: values.leisureActivities?.split(',').map((a: string) => a.trim()) || [],
                 nearbyAttractions: values.nearbyAttractions?.split(',').map((a: string) => a.trim()) || [],
-                roomTypes: values.roomTypes ? JSON.parse(values.roomTypes) : [],
+                roomTypes,
                 reviewsList: values.reviewsList ? JSON.parse(values.reviewsList) : [],
                 mapEmbedUrl: values.mapEmbedUrl,
             };
+            console.log('Sending hotelPayload to API:', hotelPayload);
             const response = await fetch(url, {
                 method,
                 headers: {
@@ -194,14 +250,17 @@ export default function HotelForm({ initialData }: HotelFormProps) {
                 },
                 body: JSON.stringify(hotelPayload),
             });
+            console.log('API response:', response.status);
             if (!response.ok) {
                 const errorData = await response.json();
+                console.error('API error:', errorData);
                 throw new Error(errorData.error || 'Something went wrong.');
             }
             toast.success(initialData ? 'Hotel updated successfully!' : 'Hotel created successfully!');
             router.push('/admin/hotels');
         } catch (err: any) {
             toast.error(err.message || 'Something went wrong.');
+            console.error('onSubmit error:', err);
         }
     };
 
@@ -556,20 +615,24 @@ export default function HotelForm({ initialData }: HotelFormProps) {
                     />
                 </div>
                 {/* --- New Optional Sections --- */}
-                <FormField
-                    control={form.control}
-                    name="propertyHighlights"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Property Highlights (optional)</FormLabel>
-                            <FormControl>
-                                <Textarea rows={2} placeholder="e.g., Top Location, Free Private Parking" {...field} />
-                            </FormControl>
-                            <FormDescription>Comma-separated list of highlights (e.g., Top Location, Free Private Parking).</FormDescription>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
+                <div>
+                    <FormLabel>Property Highlights (optional)</FormLabel>
+                    {highlightFields.map((field, idx) => (
+                        <div key={field.id} className="flex items-center gap-2 mb-2">
+                            <Input
+                                {...form.register(`propertyHighlights.${idx}` as const)}
+                                defaultValue={field}
+                                placeholder="e.g., Top Location"
+                            />
+                            <Button type="button" variant="outline" onClick={() => removeHighlight(idx)}>-</Button>
+                        </div>
+                    ))}
+                    <Button type="button" variant="secondary" onClick={() => appendHighlight('')}>+ Add Highlight</Button>
+                    <FormDescription>
+                        Add one or more highlights for this property.
+                    </FormDescription>
+                    <FormMessage />
+                </div>
                 <FormField
                     control={form.control}
                     name="leisureActivities"
@@ -598,20 +661,39 @@ export default function HotelForm({ initialData }: HotelFormProps) {
                         </FormItem>
                     )}
                 />
-                <FormField
-                    control={form.control}
-                    name="roomTypes"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Room Types & Prices (optional, JSON)</FormLabel>
-                            <FormControl>
-                                <Textarea rows={3} placeholder='e.g., [{"type":"Deluxe","beds":"1 king","price":120}]' {...field} />
-                            </FormControl>
-                            <FormDescription>Enter an array of objects: <code>[{'{"type":"Deluxe","beds":"1 king","price":120}'}]</code></FormDescription>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
+                {/* --- Room Types Section --- */}
+                <div>
+                    <FormLabel>Room Types & Prices (optional)</FormLabel>
+                    {roomTypeFields.map((field, idx) => (
+                        <div key={field.id} className="flex flex-wrap gap-2 mb-2 items-end">
+                            <Input
+                                {...form.register(`roomTypes.${idx}.type` as const)}
+                                defaultValue={field.type}
+                                placeholder="Type (e.g., Deluxe)"
+                                className="w-32"
+                            />
+                            <Input
+                                {...form.register(`roomTypes.${idx}.beds` as const)}
+                                defaultValue={field.beds}
+                                placeholder="Beds (e.g., 1 king)"
+                                className="w-32"
+                            />
+                            <Input
+                                {...form.register(`roomTypes.${idx}.price` as const)}
+                                defaultValue={field.price}
+                                placeholder="Price"
+                                type="number"
+                                className="w-24"
+                            />
+                            <Button type="button" variant="outline" onClick={() => removeRoomType(idx)}>-</Button>
+                        </div>
+                    ))}
+                    <Button type="button" variant="secondary" onClick={() => appendRoomType({ type: '', beds: '', price: '' })}>+ Add Room Type</Button>
+                    <FormDescription>
+                        Add one or more room types for this hotel. Each entry should have a type, beds, and price.
+                    </FormDescription>
+                    <FormMessage />
+                </div>
                 <FormField
                     control={form.control}
                     name="reviewsList"

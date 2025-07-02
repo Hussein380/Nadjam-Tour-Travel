@@ -13,6 +13,7 @@ export default function EditHotelPage({ params }: { params: { id: string } }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        if (!params?.id) return;
         const fetchHotel = async () => {
             try {
                 const auth = getAuth();
@@ -32,9 +33,8 @@ export default function EditHotelPage({ params }: { params: { id: string } }) {
                 setLoading(false);
             }
         };
-
         fetchHotel();
-    }, [params.id]);
+    }, [params?.id]);
 
     if (loading) {
         return (

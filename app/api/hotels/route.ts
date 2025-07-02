@@ -106,6 +106,7 @@ export async function POST(req: NextRequest) {
     await admin.auth().verifyIdToken(token);
 
     const body = await req.json();
+    console.log('Received POST /api/hotels body:', body);
 
     const finalHotelData = {
       ...body,
@@ -124,6 +125,7 @@ export async function POST(req: NextRequest) {
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     };
+    console.log('finalHotelData to be saved:', finalHotelData);
 
     await db.collection('hotels').add(finalHotelData);
 

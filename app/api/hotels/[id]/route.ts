@@ -32,22 +32,20 @@ async function uploadToCloudinary(file: File): Promise<string> {
 }
 
 export async function GET(req: NextRequest, context: { params: { id: string } }) {
-    const { params } = context;
+    // Fix for Next.js 13+ app directory: await params if needed
+    const params = await (context.params instanceof Promise ? context.params : Promise.resolve(context.params));
     try {
         // Public GET: do not require authentication
         const doc = await db.collection('hotels').doc(params.id).get();
-
         if (!doc.exists) {
             return NextResponse.json({ error: 'Hotel not found' }, { status: 404 });
         }
-
         const hotel = {
             id: doc.id,
             ...doc.data(),
             createdAt: doc.data()?.createdAt?.toDate(),
             updatedAt: doc.data()?.updatedAt?.toDate(),
         };
-
         return NextResponse.json(hotel);
     } catch (error) {
         return NextResponse.json({ error: 'Failed to fetch hotel' }, { status: 500 });
@@ -55,17 +53,17 @@ export async function GET(req: NextRequest, context: { params: { id: string } })
 }
 
 export async function PUT(req: NextRequest, context: { params: { id: string } }) {
+    // Fix for Next.js 13+ app directory: await params if needed
+    const params = await (context.params instanceof Promise ? context.params : Promise.resolve(context.params));
     try {
         const token = req.headers.get('Authorization')?.split('Bearer ')[1];
         if (!token) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
         await admin.auth().verifyIdToken(token);
-
         let hotelData: any = {};
         let imageUrl: string | undefined = undefined;
         let imageFile: File | null = null;
-
         const contentType = req.headers.get('content-type') || '';
         if (contentType.includes('application/json')) {
             hotelData = await req.json();
@@ -85,7 +83,6 @@ export async function PUT(req: NextRequest, context: { params: { id: string } })
         } else {
             return NextResponse.json({ error: 'Unsupported content type' }, { status: 400 });
         }
-
         const finalHotelData = {
             ...hotelData,
             price: parseFloat(hotelData.price),
@@ -104,14 +101,9 @@ export async function PUT(req: NextRequest, context: { params: { id: string } })
         if (imageUrl) {
             finalHotelData.image = imageUrl;
         }
-
-        // Fix for Next.js 15+ params
-        const params = await (context.params instanceof Promise ? context.params : Promise.resolve(context.params));
         const hotelId = params.id;
         await db.collection('hotels').doc(hotelId).update(finalHotelData);
-
         return NextResponse.json({ message: 'Hotel updated successfully!' }, { status: 200 });
-
     } catch (error: any) {
         console.error(`Error updating hotel ${context.params.id}:`, error);
         if (error.code === 'auth/id-token-expired') {
