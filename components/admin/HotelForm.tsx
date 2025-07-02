@@ -45,10 +45,16 @@ const formSchema = z.object({
     featured: z.boolean().default(false),
     active: z.boolean().default(true),
     types: z.array(z.enum(['Budget', 'Standard', 'Luxury'])).min(1, 'Select at least one hotel type.'),
-    propertyHighlights: z.string().optional(),
+    propertyHighlights: z.array(z.string()).optional(),
     leisureActivities: z.string().optional(),
     nearbyAttractions: z.string().optional(),
-    roomTypes: z.string().optional(),
+    roomTypes: z.array(
+        z.object({
+            type: z.string().optional(),
+            beds: z.string().optional(),
+            price: z.string().optional(),
+        })
+    ).optional(),
     reviewsList: z.string().optional(),
     mapEmbedUrl: z.string().optional(),
 });
@@ -72,10 +78,10 @@ export default function HotelForm({ initialData }: HotelFormProps) {
             ...initialData,
             amenities: initialData.amenities.join(', '),
             types: (initialData.types?.filter((t: any) => ['Budget', 'Standard', 'Luxury'].includes(t)) as ("Budget" | "Standard" | "Luxury")[]) || [],
-            propertyHighlights: initialData.propertyHighlights?.join(', ') || '',
+            propertyHighlights: initialData.propertyHighlights || [],
             leisureActivities: initialData.leisureActivities?.join(', ') || '',
             nearbyAttractions: initialData.nearbyAttractions?.join(', ') || '',
-            roomTypes: initialData.roomTypes ? JSON.stringify(initialData.roomTypes, null, 2) : '',
+            roomTypes: Array.isArray(initialData.roomTypes) ? initialData.roomTypes : [],
             reviewsList: initialData.reviewsList ? JSON.stringify(initialData.reviewsList, null, 2) : '',
             mapEmbedUrl: initialData.mapEmbedUrl || '',
         } : {
@@ -92,10 +98,10 @@ export default function HotelForm({ initialData }: HotelFormProps) {
             featured: false,
             active: true,
             types: [],
-            propertyHighlights: '',
+            propertyHighlights: [],
             leisureActivities: '',
             nearbyAttractions: '',
-            roomTypes: '',
+            roomTypes: [],
             reviewsList: '',
             mapEmbedUrl: '',
         },
@@ -108,10 +114,10 @@ export default function HotelForm({ initialData }: HotelFormProps) {
                 ...initialData,
                 amenities: initialData.amenities.join(', '),
                 types: (initialData.types?.filter((t: any) => ['Budget', 'Standard', 'Luxury'].includes(t)) as ("Budget" | "Standard" | "Luxury")[]) || [],
-                propertyHighlights: initialData.propertyHighlights?.join(', ') || '',
+                propertyHighlights: initialData.propertyHighlights || [],
                 leisureActivities: initialData.leisureActivities?.join(', ') || '',
                 nearbyAttractions: initialData.nearbyAttractions?.join(', ') || '',
-                roomTypes: initialData.roomTypes ? JSON.stringify(initialData.roomTypes, null, 2) : '',
+                roomTypes: Array.isArray(initialData.roomTypes) ? initialData.roomTypes : [],
                 reviewsList: initialData.reviewsList ? JSON.stringify(initialData.reviewsList, null, 2) : '',
                 mapEmbedUrl: initialData.mapEmbedUrl || '',
             });
@@ -121,16 +127,6 @@ export default function HotelForm({ initialData }: HotelFormProps) {
     const { formState: { isSubmitting }, setValue } = form;
 
     // --- propertyHighlights dynamic field array ---
-    // Parse initial value for propertyHighlights
-    useEffect(() => {
-        if (form.getValues('propertyHighlights') && typeof form.getValues('propertyHighlights') === 'string') {
-            const highlightsArr = form.getValues('propertyHighlights')
-                .split(',')
-                .map((h: string) => h.trim())
-                .filter((h: string) => h.length > 0);
-            form.setValue('propertyHighlights', highlightsArr);
-        }
-    }, []);
     // UseFieldArray for propertyHighlights
     const { fields: highlightFields, append: appendHighlight, remove: removeHighlight } = useFieldArray({
         control: form.control,
@@ -138,19 +134,6 @@ export default function HotelForm({ initialData }: HotelFormProps) {
     });
 
     // --- roomTypes dynamic field array ---
-    // Parse initial value for roomTypes
-    useEffect(() => {
-        if (form.getValues('roomTypes') && typeof form.getValues('roomTypes') === 'string') {
-            try {
-                const arr = JSON.parse(form.getValues('roomTypes'));
-                if (Array.isArray(arr)) {
-                    form.setValue('roomTypes', arr);
-                }
-            } catch {
-                form.setValue('roomTypes', []);
-            }
-        }
-    }, []);
     // UseFieldArray for roomTypes
     const { fields: roomTypeFields, append: appendRoomType, remove: removeRoomType } = useFieldArray({
         control: form.control,
@@ -212,18 +195,6 @@ export default function HotelForm({ initialData }: HotelFormProps) {
                 }
             }
 
-            // Convert propertyHighlights array to comma-separated string for backend
-            let highlights = values.propertyHighlights;
-            if (Array.isArray(highlights)) {
-                highlights = highlights.map((h: any) => (typeof h === 'string' ? h : h.value)).filter(Boolean).join(', ');
-            }
-
-            // Convert roomTypes array to JSON string for backend
-            let roomTypes = values.roomTypes;
-            if (Array.isArray(roomTypes)) {
-                roomTypes = JSON.stringify(roomTypes.filter(rt => rt.type && rt.beds && rt.price));
-            }
-
             // 3. Submit hotel data with image URLs
             const method = initialData ? 'PUT' : 'POST';
             const url = initialData ? `/api/hotels/${initialData.id}` : '/api/hotels';
@@ -234,10 +205,10 @@ export default function HotelForm({ initialData }: HotelFormProps) {
                 image: allImages[0] || '',
                 amenities: values.amenities.split(',').map((a: string) => a.trim()),
                 types: values.types,
-                propertyHighlights: highlights ? highlights.split(',').map((a: string) => a.trim()) : [],
+                propertyHighlights: values.propertyHighlights,
                 leisureActivities: values.leisureActivities?.split(',').map((a: string) => a.trim()) || [],
                 nearbyAttractions: values.nearbyAttractions?.split(',').map((a: string) => a.trim()) || [],
-                roomTypes,
+                roomTypes: values.roomTypes,
                 reviewsList: values.reviewsList ? JSON.parse(values.reviewsList) : [],
                 mapEmbedUrl: values.mapEmbedUrl,
             };
@@ -298,9 +269,16 @@ export default function HotelForm({ initialData }: HotelFormProps) {
         reader.readAsDataURL(file);
     };
 
+    console.log('formState.errors', form.formState.errors);
+
     return (
         <FormProvider {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <form
+                onSubmit={form.handleSubmit(onSubmit, (errors) => {
+                    console.log('Validation failed:', errors);
+                })}
+                className="space-y-8"
+            >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <FormField
                         control={form.control}
@@ -616,22 +594,41 @@ export default function HotelForm({ initialData }: HotelFormProps) {
                 </div>
                 {/* --- New Optional Sections --- */}
                 <div>
-                    <FormLabel>Property Highlights (optional)</FormLabel>
-                    {highlightFields.map((field, idx) => (
-                        <div key={field.id} className="flex items-center gap-2 mb-2">
-                            <Input
-                                {...form.register(`propertyHighlights.${idx}` as const)}
-                                defaultValue={field}
-                                placeholder="e.g., Top Location"
-                            />
-                            <Button type="button" variant="outline" onClick={() => removeHighlight(idx)}>-</Button>
-                        </div>
-                    ))}
-                    <Button type="button" variant="secondary" onClick={() => appendHighlight('')}>+ Add Highlight</Button>
-                    <FormDescription>
-                        Add one or more highlights for this property.
-                    </FormDescription>
-                    <FormMessage />
+                    <FormField
+                        control={form.control}
+                        name="propertyHighlights"
+                        render={() => (
+                            <FormItem>
+                                <FormLabel>Property Highlights (optional)</FormLabel>
+                                {form.watch('propertyHighlights')?.map((_, idx) => (
+                                    <div key={idx} className="flex items-center gap-2 mb-2">
+                                        <Input
+                                            {...form.register(`propertyHighlights.${idx}` as const)}
+                                            placeholder="e.g., Top Location"
+                                        />
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() => {
+                                                const arr = [...form.getValues('propertyHighlights')];
+                                                arr.splice(idx, 1);
+                                                form.setValue('propertyHighlights', arr);
+                                            }}
+                                        >-</Button>
+                                    </div>
+                                ))}
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    onClick={() => form.setValue('propertyHighlights', [...(form.getValues('propertyHighlights') || []), ''])}
+                                >+ Add Highlight</Button>
+                                <FormDescription>
+                                    Add one or more highlights for this property.
+                                </FormDescription>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
                 </div>
                 <FormField
                     control={form.control}
@@ -668,19 +665,19 @@ export default function HotelForm({ initialData }: HotelFormProps) {
                         <div key={field.id} className="flex flex-wrap gap-2 mb-2 items-end">
                             <Input
                                 {...form.register(`roomTypes.${idx}.type` as const)}
-                                defaultValue={field.type}
+                                defaultValue={field.type ?? ''}
                                 placeholder="Type (e.g., Deluxe)"
                                 className="w-32"
                             />
                             <Input
                                 {...form.register(`roomTypes.${idx}.beds` as const)}
-                                defaultValue={field.beds}
+                                defaultValue={field.beds ?? ''}
                                 placeholder="Beds (e.g., 1 king)"
                                 className="w-32"
                             />
                             <Input
                                 {...form.register(`roomTypes.${idx}.price` as const)}
-                                defaultValue={field.price}
+                                defaultValue={field.price ?? ''}
                                 placeholder="Price"
                                 type="number"
                                 className="w-24"
@@ -725,6 +722,7 @@ export default function HotelForm({ initialData }: HotelFormProps) {
                 <Button type="submit" disabled={isSubmitting}>
                     {isSubmitting ? 'Saving...' : (initialData ? 'Save Changes' : 'Create Hotel')}
                 </Button>
+                <button type="submit">Test Native Submit</button>
             </form>
         </FormProvider>
     );
