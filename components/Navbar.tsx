@@ -30,16 +30,14 @@ export function Navbar() {
   const services = [
     { href: "/services/hajj-umrah", label: "Hajj & Umrah", icon: Heart },
     { href: "/services/mice", label: "MICE Tourism", icon: Users },
-    { href: "/services/weddings", label: "Weddings", icon: Heart },
-    { href: "/services/honeymoons", label: "Honeymoons", icon: Heart },
-    { href: "/services/cargo", label: "Cargo Services", icon: Package },
+    { href: "/services/honeymoon-wedding", label: "Honeymoon & Wedding", icon: Heart },
   ]
 
   return (
     <nav
       className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled
-          ? "bg-white/90 backdrop-blur-md shadow-lg border-b border-white/20"
-          : "bg-white/95 backdrop-blur-sm shadow-lg border-b"
+        ? "bg-white/90 backdrop-blur-md shadow-lg border-b border-white/20"
+        : "bg-white/95 backdrop-blur-sm shadow-lg border-b"
         }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6">

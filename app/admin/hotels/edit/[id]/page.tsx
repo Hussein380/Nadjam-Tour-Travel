@@ -9,17 +9,19 @@ import { toast } from 'sonner';
 import { getAuth } from 'firebase/auth';
 
 export default function EditHotelPage({ params }: { params: { id: string } }) {
+    // Unwrap params promise for Next.js 14+
+    const { id } = React.use(params);
     const [hotel, setHotel] = useState<Hotel | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (!params?.id) return;
+        if (!id) return;
         const fetchHotel = async () => {
             try {
                 const auth = getAuth();
                 const user = auth.currentUser;
                 const token = user && (await user.getIdToken());
-                const response = await fetch(`/api/hotels/${params.id}`, {
+                const response = await fetch(`/api/hotels/${id}`, {
                     headers: token ? { Authorization: `Bearer ${token}` } : {},
                 });
                 if (!response.ok) {
@@ -34,7 +36,7 @@ export default function EditHotelPage({ params }: { params: { id: string } }) {
             }
         };
         fetchHotel();
-    }, [params?.id]);
+    }, [id]);
 
     if (loading) {
         return (

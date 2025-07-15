@@ -1,127 +1,247 @@
+'use client';
+
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Star, Users, Plane, Building } from "lucide-react"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  Star,
+  Users,
+  Plane,
+  Building,
+  BookOpen,
+  Calendar,
+  MapPin,
+  Shield,
+  Heart,
+  CheckCircle,
+  Clock,
+  Info,
+  Phone,
+  Mail,
+  MessageCircle,
+  Cube,
+  Mountain,
+  SquareStack
+} from "lucide-react"
 import Image from "next/image"
+import Link from "next/link"
+import { motion } from "framer-motion"
 
-const hajjPackages = [
-  {
-    id: 1,
-    title: "Premium Hajj Package",
-    duration: "15 Days",
-    price: 4999,
-    rating: 4.9,
-    image: "/placeholder.svg?height=300&width=400",
-    includes: ["5-Star Hotels", "VIP Transportation", "Guided Tours", "All Meals"],
-    description: "Luxury Hajj experience with premium accommodations and services",
-  },
-  {
-    id: 2,
-    title: "Standard Umrah Package",
-    duration: "7 Days",
-    price: 1899,
-    rating: 4.7,
-    image: "/placeholder.svg?height=300&width=400",
-    includes: ["4-Star Hotels", "Transportation", "Ziyarat Tours", "Breakfast"],
-    description: "Comfortable Umrah journey with excellent value for money",
-  },
-  {
-    id: 3,
-    title: "Family Hajj Package",
-    duration: "18 Days",
-    price: 4299,
-    rating: 4.8,
-    image: "/placeholder.svg?height=300&width=400",
-    includes: ["Family Rooms", "Child Care", "Group Activities", "All Meals"],
-    description: "Perfect for families with children and elderly members",
-  },
-]
-
-export default function HajjUmrahPage() {
+export default function Page() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-green-600 to-teal-600 text-white">
-        <div className="max-w-7xl mx-auto px-4 py-16">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Hajj & Umrah Services</h1>
-          <p className="text-xl text-green-100">
-            Experience the spiritual journey of a lifetime with our comprehensive Hajj and Umrah packages
-          </p>
-        </div>
-      </div>
+    <div className="container mx-auto p-4">
+      <h1 className="text-4xl font-bold mb-4">Hajj & Umrah Packages and Pilgrimage Guide</h1>
+      <p className="text-lg mb-6">
+        Book your Hajj or Umrah journey with confidence. Nadjam Travel provides affordable packages, expert guidance, and personalized pilgrimage experiences.
+      </p>
 
-      {/* Services Overview */}
-      <div className="max-w-7xl mx-auto px-4 py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Our Hajj & Umrah Services</h2>
-          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            We provide complete Hajj and Umrah services with experienced guides, comfortable accommodations, and
-            spiritual guidance throughout your journey.
-          </p>
-        </div>
+      <Tabs defaultValue="hajj" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="hajj">Hajj Packages</TabsTrigger>
+          <TabsTrigger value="umrah">Umrah Packages</TabsTrigger>
+        </TabsList>
 
-        <div className="grid md:grid-cols-3 gap-8 mb-16">
-          <div className="text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Building className="w-8 h-8 text-green-600" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">Premium Accommodations</h3>
-            <p className="text-gray-600">Stay in comfortable hotels close to Haram with excellent facilities</p>
-          </div>
-          <div className="text-center">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Users className="w-8 h-8 text-blue-600" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">Expert Guidance</h3>
-            <p className="text-gray-600">Experienced religious guides to help you perform rituals correctly</p>
-          </div>
-          <div className="text-center">
-            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Plane className="w-8 h-8 text-purple-600" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">Complete Travel</h3>
-            <p className="text-gray-600">Flights, visas, transportation, and all travel arrangements included</p>
-          </div>
-        </div>
-
-        {/* Packages */}
-        <h2 className="text-3xl font-bold text-gray-900 mb-8">Available Packages</h2>
-        <div className="grid md:grid-cols-3 gap-6">
-          {hajjPackages.map((pkg) => (
-            <Card key={pkg.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-              <div className="relative h-48">
-                <Image src={pkg.image || "/placeholder.svg"} alt={pkg.title} fill className="object-cover" />
-                <Badge className="absolute top-3 right-3 bg-white text-gray-900">{pkg.duration}</Badge>
-              </div>
-              <CardHeader>
-                <CardTitle className="text-lg">{pkg.title}</CardTitle>
-                <div className="flex items-center">
-                  <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                  <span className="text-sm ml-1">{pkg.rating} rating</span>
+        <TabsContent value="hajj">
+          <h2 className="text-2xl font-bold mb-4">Hajj Packages</h2>
+          <div className="grid gap-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div>
+                  <CardTitle className="text-xl">Basic Hajj Package</CardTitle>
+                  <p className="text-sm text-muted-foreground">For first-time pilgrims</p>
                 </div>
+                <Badge variant="outline">Starting from $1,200</Badge>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600 text-sm mb-4">{pkg.description}</p>
-                <div className="space-y-2 mb-4">
-                  {pkg.includes.map((item, index) => (
-                    <div key={index} className="flex items-center text-sm text-gray-600">
-                      <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                      {item}
-                    </div>
-                  ))}
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-2xl font-bold text-green-600">${pkg.price}</span>
-                    <span className="text-gray-500 text-sm">/person</span>
-                  </div>
-                  <Button className="bg-green-600 hover:bg-green-700">Book Now</Button>
-                </div>
+                <p>This package includes:</p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground">
+                  <li>Accommodation in Makkah</li>
+                  <li>Flights from your city</li>
+                  <li>Ground transportation</li>
+                  <li>Meal plan</li>
+                  <li>Visa assistance</li>
+                </ul>
+                <Button className="mt-4">Book Now</Button>
               </CardContent>
             </Card>
-          ))}
-        </div>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div>
+                  <CardTitle className="text-xl">Premium Hajj Package</CardTitle>
+                  <p className="text-sm text-muted-foreground">For families and groups</p>
+                </div>
+                <Badge variant="outline">Starting from $2,500</Badge>
+              </CardHeader>
+              <CardContent>
+                <p>This package includes:</p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground">
+                  <li>Luxury accommodation in Makkah</li>
+                  <li>Private flights</li>
+                  <li>Personalized tour guide</li>
+                  <li>Exclusive access to holy sites</li>
+                  <li>24/7 support</li>
+                </ul>
+                <Button className="mt-4">Book Now</Button>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="umrah">
+          <h2 className="text-2xl font-bold mb-4">Umrah Packages</h2>
+          <div className="grid gap-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div>
+                  <CardTitle className="text-xl">Standard Umrah Package</CardTitle>
+                  <p className="text-sm text-muted-foreground">For individual pilgrims</p>
+                </div>
+                <Badge variant="outline">Starting from $800</Badge>
+              </CardHeader>
+              <CardContent>
+                <p>This package includes:</p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground">
+                  <li>Accommodation in Madinah</li>
+                  <li>Ground transportation</li>
+                  <li>Meal plan</li>
+                  <li>Visa assistance</li>
+                  <li>Personalized itinerary</li>
+                </ul>
+                <Button className="mt-4">Book Now</Button>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div>
+                  <CardTitle className="text-xl">VIP Umrah Package</CardTitle>
+                  <p className="text-sm text-muted-foreground">For families and groups</p>
+                </div>
+                <Badge variant="outline">Starting from $1,800</Badge>
+              </CardHeader>
+              <CardContent>
+                <p>This package includes:</p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground">
+                  <li>Luxury accommodation in Madinah</li>
+                  <li>Private flights</li>
+                  <li>Personalized tour guide</li>
+                  <li>Exclusive access to holy sites</li>
+                  <li>24/7 support</li>
+                </ul>
+                <Button className="mt-4">Book Now</Button>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
+
+      <h2 className="text-2xl font-bold mt-12 mb-4">Why Choose Nadjam Travel?</h2>
+      <div className="grid gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div>
+              <CardTitle className="text-xl">Expert Guidance</CardTitle>
+              <p className="text-sm text-muted-foreground">Our team of pilgrimage experts</p>
+            </div>
+            <Badge variant="outline">24/7 Support</Badge>
+          </CardHeader>
+          <CardContent>
+            <p>
+              Our dedicated team of pilgrimage experts is here to guide you every step of the way.
+              From visa assistance to accommodation, we ensure your journey is smooth and hassle-free.
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div>
+              <CardTitle className="text-xl">Affordable Packages</CardTitle>
+              <p className="text-sm text-muted-foreground">Competitive pricing</p>
+            </div>
+            <Badge variant="outline">Best Value</Badge>
+          </CardHeader>
+          <CardContent>
+            <p>
+              We offer competitive pricing without compromising on quality.
+              Our packages are designed to be affordable while providing the best pilgrimage experience.
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div>
+              <CardTitle className="text-xl">Personalized Experience</CardTitle>
+              <p className="text-sm text-muted-foreground">Tailored for your needs</p>
+            </div>
+            <Badge variant="outline">Customizable</Badge>
+          </CardHeader>
+          <CardContent>
+            <p>
+              We understand that every pilgrim is unique.
+              Our packages are customizable to suit your preferences, budget, and schedule.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <h2 className="text-2xl font-bold mt-12 mb-4">Frequently Asked Questions</h2>
+      <Accordion type="single" collapsible className="w-full">
+        <AccordionItem value="question1">
+          <AccordionTrigger>What is Hajj and Umrah?</AccordionTrigger>
+          <AccordionContent>
+            Hajj is the annual pilgrimage to Mecca, Saudi Arabia, for all able-bodied Muslims who can afford it.
+            Umrah is a smaller, less obligatory pilgrimage that can be performed at any time of the year.
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="question2">
+          <AccordionTrigger>Do I need a visa to perform Hajj/Umrah?</AccordionTrigger>
+          <AccordionContent>
+            Yes, you need a visa to perform Hajj. Umrah is generally visa-free for Muslims from most countries.
+            However, it's always best to check the latest requirements with your travel agency.
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="question3">
+          <AccordionTrigger>What are the dates for Hajj and Umrah?</AccordionTrigger>
+          <AccordionContent>
+            Hajj dates vary each year, typically in July-August. Umrah can be performed at any time of the year.
+            It's recommended to book your pilgrimage well in advance to secure accommodation and flights.
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="question4">
+          <AccordionTrigger>What are the health requirements for Hajj/Umrah?</AccordionTrigger>
+          <AccordionContent>
+            You must be in good health to perform Hajj/Umrah.
+            It's also recommended to be up-to-date with vaccinations, especially for Hajj.
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+
+      <h2 className="text-2xl font-bold mt-12 mb-4">Contact Us</h2>
+      <div className="grid gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div>
+              <CardTitle className="text-xl">Nadjam Travel</CardTitle>
+              <p className="text-sm text-muted-foreground">Your trusted pilgrimage partner</p>
+            </div>
+            <Badge variant="outline">Visit Us</Badge>
+          </CardHeader>
+          <CardContent>
+            <p>
+              For more information or to book your pilgrimage, please contact us:
+            </p>
+            <ul className="list-none text-sm text-muted-foreground">
+              <li><Phone className="inline-block mr-2" /> +1 (555) 123-4567</li>
+              <li><Mail className="inline-block mr-2" /> info@nadjamtravel.com</li>
+              <li><MessageCircle className="inline-block mr-2" /> @nadjamtravel</li>
+            </ul>
+            <p className="mt-4">
+              Visit our website for detailed packages, testimonials, and FAQs.
+            </p>
+          </CardContent>
+        </Card>
       </div>
     </div>
-  )
+  );
 }
