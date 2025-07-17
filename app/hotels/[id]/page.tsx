@@ -137,12 +137,30 @@ export default function HotelDetailsPage() {
                     </ul>
                 </div>
             )}
-            {/* Room Types & Prices (optional placeholder) */}
+            {/* Room Types & Prices (optional) */}
             {hotel.roomTypes && hotel.roomTypes.length > 0 && (
                 <div className="mb-6">
                     <h2 className="text-xl font-semibold mb-2">Room Types & Prices</h2>
-                    {/* TODO: Render room types and prices in a table or cards */}
-                    <div className="text-gray-500">Room types and prices coming soon...</div>
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full border border-gray-200 rounded-lg">
+                            <thead>
+                                <tr className="bg-gray-100">
+                                    <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Type</th>
+                                    <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Beds</th>
+                                    <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {hotel.roomTypes.map((room, idx) => (
+                                    <tr key={idx} className="border-t border-gray-200">
+                                        <td className="px-4 py-2 text-gray-900">{room.type || '-'}</td>
+                                        <td className="px-4 py-2 text-gray-700">{room.beds || '-'}</td>
+                                        <td className="px-4 py-2 text-green-700 font-semibold">{room.price ? `$${room.price}` : '-'}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             )}
             {/* Guest Reviews (optional placeholder) */}

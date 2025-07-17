@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -18,55 +18,104 @@ import { Hotel } from '@/lib/types';
 import Link from "next/link";
 
 export default function HotelsPage() {
-  const [allHotels, setAllHotels] = useState<Hotel[]>([]);
-  const [displayedHotels, setDisplayedHotels] = useState<Hotel[]>([]);
+  const [hotels, setHotels] = useState<Hotel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [filters, setFilters] = useState({
+  const [lastHotelCreatedAt, setLastHotelCreatedAt] = useState<Date | null>(null);
+  type Filters = {
+    search: string;
+    amenities: string[];
+    location: string;
+    hotelTypes: string[];
+  };
+  const [filters, setFilters] = useState<Filters>({
     search: "",
     amenities: [],
     location: "",
-    hotelTypes: [], // Budget, Standard, Luxury
+    hotelTypes: [],
   });
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
   const [selectedHotelName, setSelectedHotelName] = useState<string | null>(null);
   const [showAmenitiesDropdown, setShowAmenitiesDropdown] = useState(false);
+  const observer = useRef<IntersectionObserver | null>(null);
+  const LIMIT = 12;
 
-  const ITEMS_PER_PAGE = 6;
-
-  // Fetch all hotels
-  useEffect(() => {
-    const fetchHotels = async () => {
-      try {
-        const res = await fetch("/api/hotels?active=true");
-        if (!res.ok) throw new Error("Failed to fetch hotels");
-        const data = await res.json();
-        setAllHotels(data);
-      } catch (err) {
-        setError("Failed to load hotels");
-      } finally {
-        setLoading(false);
+  // Fetch hotels (initial and paginated)
+  const fetchHotels = useCallback(async (reset = false) => {
+    setLoading(true);
+    setError("");
+    try {
+      let url = `/api/hotels?active=true&limit=${LIMIT}`;
+      if (!reset && lastHotelCreatedAt) {
+        url += `&startAfter=${encodeURIComponent(lastHotelCreatedAt.toISOString())}`;
       }
-    };
-    fetchHotels();
-  }, []);
+      // Add filter params to API call
+      if (filters.search) url += `&search=${encodeURIComponent(filters.search)}`;
+      if (filters.amenities.length) url += `&amenities=${filters.amenities.join(',')}`;
+      if (filters.hotelTypes.length) url += `&hotelTypes=${filters.hotelTypes.join(',')}`;
+      if (filters.location) url += `&location=${encodeURIComponent(filters.location)}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Failed to fetch hotels");
+      const data = await res.json();
+      if (reset) {
+        setHotels(data);
+      } else {
+        setHotels(prev => [...prev, ...data]);
+      }
+      if (data.length < LIMIT) {
+        setHasMore(false);
+      } else {
+        setHasMore(true);
+      }
+      if (data.length > 0) {
+        setLastHotelCreatedAt(new Date(data[data.length - 1].createdAt));
+      }
+    } catch (err) {
+      setError("Failed to load hotels");
+    } finally {
+      setLoading(false);
+    }
+  }, [lastHotelCreatedAt, filters]);
+
+  // Initial fetch and reset on filters change
+  useEffect(() => {
+    setHotels([]);
+    setLastHotelCreatedAt(null);
+    setHasMore(true);
+    fetchHotels(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters]);
+
+  // Infinite scroll observer
+  const lastHotelRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (loading) return;
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver(entries => {
+        if (entries[0].isIntersecting && hasMore) {
+          fetchHotels();
+        }
+      });
+      if (node) observer.current.observe(node);
+    },
+    [loading, hasMore, fetchHotels]
+  );
 
   // Calculate dynamic filter data
   const filterData: Record<string, any> = useMemo(() => {
-    const allAmenities = allHotels.reduce((acc, hotel) => {
+    const allAmenities = hotels.reduce((acc, hotel) => {
       hotel.amenities.forEach(amenity => {
         acc[amenity] = (acc[amenity] || 0) + 1;
       });
       return acc;
     }, {});
     return { allAmenities };
-  }, [allHotels]);
+  }, [hotels]);
 
   // Filter hotels based on current filters
   const filteredHotels = useMemo(() => {
-    return allHotels.filter(hotel => {
+    return hotels.filter(hotel => {
       // Search filter
       if (filters.search && !hotel.name.toLowerCase().includes(filters.search.toLowerCase()) &&
         !hotel.location.toLowerCase().includes(filters.search.toLowerCase())) {
@@ -91,23 +140,23 @@ export default function HotelsPage() {
       }
       return true;
     });
-  }, [allHotels, filters]);
+  }, [hotels, filters]);
 
   // Paginate filtered hotels
   useEffect(() => {
     const startIndex = 0;
-    const endIndex = page * ITEMS_PER_PAGE;
-    setDisplayedHotels(filteredHotels.slice(startIndex, endIndex));
-    setHasMore(endIndex < filteredHotels.length);
-  }, [filteredHotels, page]);
+    const endIndex = LIMIT; // Use LIMIT for pagination effect
+    // setDisplayedHotels(filteredHotels.slice(startIndex, endIndex)); // This line is no longer needed
+    // setHasMore(endIndex < filteredHotels.length); // This line is no longer needed
+  }, [filteredHotels]); // This useEffect is no longer needed
 
   // Reset page when filters change
   useEffect(() => {
-    setPage(1);
+    // setPage(1); // This line is no longer needed
   }, [filters]);
 
   const loadMore = () => {
-    setPage(prev => prev + 1);
+    // setPage(prev => prev + 1); // This line is no longer needed
   };
 
   const updateFilter = (key: string, value: any) => {
@@ -123,7 +172,7 @@ export default function HotelsPage() {
     }));
   };
 
-  if (loading) {
+  if (loading && hotels.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
@@ -339,7 +388,7 @@ export default function HotelsPage() {
                 </Select>
               </div>
 
-              {displayedHotels.length === 0 ? (
+              {hotels.length === 0 && !loading ? (
                 <div className="text-center py-12">
                   <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -351,137 +400,144 @@ export default function HotelsPage() {
                 </div>
               ) : (
                 <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {displayedHotels.map((hotel) => (
-                      <Link key={hotel.id} href={`/hotels/${hotel.id}`} className="block group focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 border-0 shadow-lg cursor-pointer">
-                          <div className="relative h-64 overflow-hidden">
-                            {hotel.images && hotel.images.length > 0 ? (
-                              <>
-                                <Swiper
-                                  modules={[Navigation, Pagination]}
-                                  navigation
-                                  pagination={{ clickable: true }}
-                                  spaceBetween={16}
-                                  slidesPerView={1}
-                                  className="rounded-t-lg overflow-hidden h-full"
-                                >
-                                  {hotel.images.map((url, idx) => (
-                                    <SwiperSlide key={idx}>
-                                      <div className="relative w-full h-64">
-                                        <Image
-                                          src={url}
-                                          alt={`Hotel image ${idx + 1}`}
-                                          fill
-                                          className="object-cover"
-                                        />
-                                      </div>
-                                    </SwiperSlide>
-                                  ))}
-                                </Swiper>
-                                {hotel.images.length > 1 && (
-                                  <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded z-20 select-none pointer-events-none">
-                                    Swipe or click arrows to see more
-                                  </div>
-                                )}
-                              </>
-                            ) : (
-                              <Image
-                                src={hotel.image || "/placeholder.svg"}
-                                alt={hotel.name}
-                                fill
-                                className="object-cover group-hover:scale-110 transition-transform duration-500"
-                              />
-                            )}
-                            <div className="absolute top-4 left-4">
-                              <Badge className="bg-red-500 text-white font-medium">{hotel.discount}% OFF</Badge>
-                            </div>
-                            <div className="absolute top-4 right-4">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="bg-white/20 backdrop-blur-sm text-white hover:bg-white/30"
-                                tabIndex={-1}
-                                type="button"
-                                onClick={e => e.preventDefault()}
-                              >
-                                <Heart className="w-4 h-4" />
-                              </Button>
-                            </div>
-                            <div className="absolute bottom-4 left-4">
-                              <Badge variant="secondary" className="bg-white/90 text-gray-900">
-                                {hotel.category}
-                              </Badge>
-                            </div>
-                          </div>
-                          <CardContent className="p-6">
-                            <div className="flex items-start justify-between mb-3">
-                              <div>
-                                <h3 className="text-xl font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
-                                  {hotel.name}
-                                </h3>
-                                <div className="flex items-center text-gray-600 mb-2">
-                                  <MapPin className="w-4 h-4 mr-1" />
-                                  <span className="text-sm">{hotel.location}</span>
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <div className="flex items-center mb-1">
-                                  <Star className="w-4 h-4 text-yellow-400 fill-current mr-1" />
-                                  <span className="font-medium">{hotel.rating}</span>
-                                  <span className="text-sm text-gray-500 ml-1">({hotel.reviews})</span>
-                                </div>
-                              </div>
-                            </div>
-                            <p className="text-gray-600 text-sm mb-4 leading-relaxed line-clamp-2">{hotel.description}</p>
-                            <div className="flex flex-wrap gap-2 mb-4">
-                              {hotel.amenities.slice(0, 4).map((amenity, index) => (
-                                <Badge key={index} variant="outline" className="text-xs">
-                                  {amenity}
-                                </Badge>
-                              ))}
-                              {hotel.amenities.length > 4 && (
-                                <Badge variant="outline" className="text-xs">
-                                  +{hotel.amenities.length - 4} more
-                                </Badge>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {hotels.map((hotel, idx) => {
+                      const card = (
+                        <Link key={hotel.id} href={`/hotels/${hotel.id}`} className="block group focus:outline-none focus:ring-2 focus:ring-blue-500">
+                          <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 border-0 shadow-lg cursor-pointer">
+                            <div className="relative h-64 overflow-hidden">
+                              {hotel.images && hotel.images.length > 0 ? (
+                                <>
+                                  <Swiper
+                                    modules={[Navigation, Pagination]}
+                                    navigation
+                                    pagination={{ clickable: true }}
+                                    spaceBetween={16}
+                                    slidesPerView={1}
+                                    className="rounded-t-lg overflow-hidden h-full"
+                                  >
+                                    {hotel.images.map((url, idx) => (
+                                      <SwiperSlide key={idx}>
+                                        <div className="relative w-full h-64">
+                                          <Image
+                                            src={url}
+                                            alt={`Hotel image ${idx + 1}`}
+                                            fill
+                                            className="object-cover"
+                                          />
+                                        </div>
+                                      </SwiperSlide>
+                                    ))}
+                                  </Swiper>
+                                  {hotel.images.length > 1 && (
+                                    <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded z-20 select-none pointer-events-none">
+                                      Swipe or click arrows to see more
+                                    </div>
+                                  )}
+                                </>
+                              ) : (
+                                <Image
+                                  src={hotel.image || "/placeholder.svg"}
+                                  alt={hotel.name}
+                                  fill
+                                  className="object-cover group-hover:scale-110 transition-transform duration-500"
+                                />
                               )}
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-2">
-                                <span className="text-sm text-gray-500 line-through">${hotel.originalPrice}</span>
-                                <span className="text-2xl font-bold text-gray-900">${hotel.price}</span>
-                                <span className="text-sm text-gray-500">per night</span>
+                              <div className="absolute top-4 left-4">
+                                <Badge className="bg-red-500 text-white font-medium">{hotel.discount}% OFF</Badge>
                               </div>
-                              <Button
-                                className="bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white"
-                                tabIndex={0}
-                                type="button"
-                                onClick={e => {
-                                  e.stopPropagation();
-                                  window.location.href = `/hotels/${hotel.id}`;
-                                }}
-                              >
-                                View More
-                              </Button>
+                              <div className="absolute top-4 right-4">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="bg-white/20 backdrop-blur-sm text-white hover:bg-white/30"
+                                  tabIndex={-1}
+                                  type="button"
+                                  onClick={e => e.preventDefault()}
+                                >
+                                  <Heart className="w-4 h-4" />
+                                </Button>
+                              </div>
+                              <div className="absolute bottom-4 left-4">
+                                <Badge variant="secondary" className="bg-white/90 text-gray-900">
+                                  {hotel.category}
+                                </Badge>
+                              </div>
                             </div>
-                          </CardContent>
-                        </Card>
-                      </Link>
-                    ))}
+                            <CardContent className="p-6">
+                              <div className="flex items-start justify-between mb-3">
+                                <div>
+                                  <h3 className="text-xl font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
+                                    {hotel.name}
+                                  </h3>
+                                  <div className="flex items-center text-gray-600 mb-2">
+                                    <MapPin className="w-4 h-4 mr-1" />
+                                    <span className="text-sm">{hotel.location}</span>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <div className="flex items-center mb-1">
+                                    <Star className="w-4 h-4 text-yellow-400 fill-current mr-1" />
+                                    <span className="font-medium">{hotel.rating}</span>
+                                    <span className="text-sm text-gray-500 ml-1">({hotel.reviews})</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <p className="text-gray-600 text-sm mb-4 leading-relaxed line-clamp-2">{hotel.description}</p>
+                              <div className="flex flex-wrap gap-2 mb-4">
+                                {hotel.amenities.slice(0, 4).map((amenity, index) => (
+                                  <Badge key={index} variant="outline" className="text-xs">
+                                    {amenity}
+                                  </Badge>
+                                ))}
+                                {hotel.amenities.length > 4 && (
+                                  <Badge variant="outline" className="text-xs">
+                                    +{hotel.amenities.length - 4} more
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-sm text-gray-500 line-through">${hotel.originalPrice}</span>
+                                  <span className="text-2xl font-bold text-gray-900">${hotel.price}</span>
+                                  <span className="text-sm text-gray-500">per night</span>
+                                </div>
+                                <Button
+                                  className="bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white"
+                                  tabIndex={0}
+                                  type="button"
+                                  onClick={e => {
+                                    e.stopPropagation();
+                                    window.location.href = `/hotels/${hotel.id}`;
+                                  }}
+                                >
+                                  View More
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </Link>
+                      );
+                      if (hotels.length === idx + 1) {
+                        return (
+                          <div ref={lastHotelRef} key={hotel.id}>
+                            {card}
+                          </div>
+                        );
+                      } else {
+                        return (
+                          <div key={hotel.id}>{card}</div>
+                        );
+                      }
+                    })}
                   </div>
-
-                  {/* Load More */}
-                  {hasMore && (
-                    <div className="text-center mt-12">
-                      <Button
-                        variant="outline"
-                        size="lg"
-                        className="px-8 py-3 text-lg"
-                        onClick={loadMore}
-                      >
-                        Load More Hotels
-                      </Button>
+                  {loading && (
+                    <div className="flex justify-center mt-8">
+                      <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                     </div>
+                  )}
+                  {!hasMore && hotels.length > 0 && (
+                    <div className="text-center mt-8 text-gray-500">No more hotels to load.</div>
                   )}
                 </>
               )}

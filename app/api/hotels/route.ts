@@ -61,10 +61,14 @@ export async function GET(req: NextRequest) {
     const featured = searchParams.get('featured');
     const active = searchParams.get('active');
     const limit = parseInt(searchParams.get('limit') || '20');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const startAfter = searchParams.get('startAfter');
+    // New filter params
+    const search = searchParams.get('search');
+    const amenities = searchParams.get('amenities');
+    const hotelTypes = searchParams.get('hotelTypes');
+    const location = searchParams.get('location');
 
-    let query: Query = db.collection('hotels');
-    // Only filter by active if not requesting all
+    let query: Query = db.collection('hotels').orderBy('createdAt', 'desc');
     if (active !== 'all') {
       query = query.where('active', '==', active === 'false' ? false : true);
     }
@@ -77,9 +81,26 @@ export async function GET(req: NextRequest) {
     if (featured === 'true') {
       query = query.where('featured', '==', true);
     }
+    if (search) {
+      query = query.where('name', '>=', search).where('name', '<=', search + '\uf8ff');
+    }
+    if (location) {
+      query = query.where('location', '==', location);
+    }
+    if (amenities) {
+      const amenitiesArr = amenities.split(',');
+      query = query.where('amenities', 'array-contains-any', amenitiesArr);
+    }
+    if (hotelTypes) {
+      const typesArr = hotelTypes.split(',');
+      query = query.where('types', 'array-contains-any', typesArr);
+    }
+    if (startAfter) {
+      const startAfterDate = new Date(startAfter);
+      query = query.startAfter(startAfterDate);
+    }
 
     const snapshot = await query.limit(limit).get();
-    // If no hotels, return empty array with 200 status
     if (snapshot.empty) {
       return NextResponse.json([], { status: 200 });
     }
@@ -92,7 +113,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(hotels, { status: 200 });
   } catch (error) {
     console.error('Error in GET /api/hotels:', error);
-    // Only return 500 for real server errors
     return NextResponse.json({ error: 'A server error occurred while fetching hotels.' }, { status: 500 });
   }
 }
