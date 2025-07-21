@@ -25,7 +25,7 @@ export function Footer() {
             <div className="flex items-start space-x-3 text-gray-300 mb-4">
               <MapPin className="w-5 h-5 text-blue-400 mt-1 flex-shrink-0" />
               <div>
-                <p className="font-medium">7th Street, Eastleigh</p>
+                <p className="font-medium"></p>
                 <p>Nairobi, Kenya</p>
               </div>
             </div>
@@ -124,10 +124,10 @@ export function Footer() {
                 <div>
                   <p className="text-gray-300 mb-1">Email</p>
                   <a
-                    href="mailto:info@nadjamtravel.co.ke"
+                    href="mailto:info@nadjamtravel.com"
                     className="text-white hover:text-blue-400 transition-colors text-base sm:text-lg font-medium break-all"
                   >
-                    info@nadjamtravel.co.ke
+                    info@nadjamtravel.com
                   </a>
                 </div>
               </div>
@@ -157,6 +157,30 @@ export function Footer() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Partners Section */}
+        <div className="mt-10 flex flex-col items-center">
+          <h4 className="text-lg font-semibold text-white mb-2">Our Partners</h4>
+          <div className="flex items-center space-x-6">
+            <a
+              href="https://www.safaribookings.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="SafariBookings"
+              className="hover:opacity-80 transition"
+            >
+              <Image
+                src="/images/safaribookings.png"
+                alt="SafariBookings"
+                width={180}
+                height={40}
+                className="h-10 w-auto object-contain"
+                style={{ padding: "4px", borderRadius: "6px", boxShadow: "0 2px 8px rgba(0,0,0,0.12)" }}
+              />
+            </a>
+            {/* Add more partners here as needed */}
           </div>
         </div>
 
