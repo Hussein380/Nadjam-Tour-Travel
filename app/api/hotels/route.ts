@@ -82,10 +82,12 @@ export async function GET(req: NextRequest) {
       query = query.where('featured', '==', true);
     }
     if (search) {
-      query = query.where('name', '>=', search).where('name', '<=', search + '\uf8ff');
+      const searchLower = search.toLowerCase();
+      query = query.where('name_lower', '>=', searchLower).where('name_lower', '<=', searchLower + '\uf8ff');
     }
     if (location) {
-      query = query.where('location', '==', location);
+      const locationLower = location.toLowerCase();
+      query = query.where('location_lower', '==', locationLower);
     }
     if (amenities) {
       const amenitiesArr = amenities.split(',');
@@ -142,6 +144,8 @@ export async function POST(req: NextRequest) {
         ? body.amenities
         : body.amenities.split(',').map((a: string) => a.trim()),
       types: Array.isArray(body.types) ? body.types : [],
+      name_lower: body.name ? body.name.toLowerCase() : '',
+      location_lower: body.location ? body.location.toLowerCase() : '',
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     };

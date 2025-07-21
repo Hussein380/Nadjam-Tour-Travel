@@ -55,6 +55,18 @@ export async function GET(req: NextRequest) {
             query = query.where('active', '==', false);
         }
 
+        const search = searchParams.get('search');
+        const location = searchParams.get('location');
+
+        if (search) {
+            const searchLower = search.toLowerCase();
+            query = query.where('title_lower', '>=', searchLower).where('title_lower', '<=', searchLower + '\uf8ff');
+        }
+        if (location) {
+            const locationLower = location.toLowerCase();
+            query = query.where('location_lower', '==', locationLower);
+        }
+
         const snapshot = await query.limit(limit).offset(offset).get();
         const packages = snapshot.docs.map(doc => ({
             id: doc.id,
@@ -112,6 +124,8 @@ export async function POST(req: NextRequest) {
         const packageData = {
             ...validatedData,
             image: validatedData.images && validatedData.images.length > 0 ? validatedData.images[0] : '/placeholder.svg',
+            title_lower: validatedData.title.toLowerCase(),
+            location_lower: validatedData.location.toLowerCase(),
             createdAt: new Date(),
             updatedAt: new Date(),
         };

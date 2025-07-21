@@ -83,6 +83,13 @@ export async function PUT(
         } else if (validatedData.image) {
             updateData.image = validatedData.image;
         }
+        // Update lowercase fields for search
+        if (validatedData.title) {
+            updateData.title_lower = validatedData.title.toLowerCase();
+        }
+        if (validatedData.location) {
+            updateData.location_lower = validatedData.location.toLowerCase();
+        }
         console.log('PUT updateData:', updateData);
 
         // Find the document by slug first
