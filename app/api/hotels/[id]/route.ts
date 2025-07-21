@@ -83,21 +83,27 @@ export async function PUT(req: NextRequest, context: { params: { id: string } })
         } else {
             return NextResponse.json({ error: 'Unsupported content type' }, { status: 400 });
         }
-        const finalHotelData = {
-            ...hotelData,
-            price: parseFloat(hotelData.price),
-            originalPrice: parseFloat(hotelData.originalPrice),
-            discount: parseInt(hotelData.discount, 10),
-            rating: parseFloat(hotelData.rating),
-            reviews: parseInt(hotelData.reviews, 10),
-            featured: hotelData.featured === true || hotelData.featured === 'true',
-            active: hotelData.active === true || hotelData.active === 'true',
-            amenities: Array.isArray(hotelData.amenities)
+        // Build update object dynamically: only include fields present in the request
+        const finalHotelData: any = { updatedAt: admin.firestore.FieldValue.serverTimestamp() };
+        if ('price' in hotelData) finalHotelData.price = parseFloat(hotelData.price);
+        if ('originalPrice' in hotelData) finalHotelData.originalPrice = parseFloat(hotelData.originalPrice);
+        if ('discount' in hotelData) finalHotelData.discount = parseInt(hotelData.discount, 10);
+        if ('rating' in hotelData) finalHotelData.rating = parseFloat(hotelData.rating);
+        if ('reviews' in hotelData) finalHotelData.reviews = parseInt(hotelData.reviews, 10);
+        if ('featured' in hotelData) finalHotelData.featured = hotelData.featured === true || hotelData.featured === 'true';
+        if ('active' in hotelData) finalHotelData.active = hotelData.active === true || hotelData.active === 'true';
+        if ('amenities' in hotelData) {
+            finalHotelData.amenities = Array.isArray(hotelData.amenities)
                 ? hotelData.amenities
-                : (typeof hotelData.amenities === 'string' ? hotelData.amenities.split(',').map((a: string) => a.trim()) : []),
-            types: Array.isArray(hotelData.types) ? hotelData.types : [],
-            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        };
+                : (typeof hotelData.amenities === 'string' ? hotelData.amenities.split(',').map((a: string) => a.trim()) : []);
+        }
+        if ('types' in hotelData) finalHotelData.types = Array.isArray(hotelData.types) ? hotelData.types : [];
+        // Add any other fields present in hotelData that aren't already handled
+        Object.keys(hotelData).forEach(key => {
+            if (!(key in finalHotelData)) {
+                finalHotelData[key] = hotelData[key];
+            }
+        });
         if (imageUrl) {
             finalHotelData.image = imageUrl;
         }
