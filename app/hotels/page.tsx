@@ -41,6 +41,30 @@ export default function HotelsPage() {
   const observer = useRef<IntersectionObserver | null>(null);
   const LIMIT = 12;
 
+  // Debounced search and location input states
+  const [searchInput, setSearchInput] = useState(filters.search);
+  const [locationInput, setLocationInput] = useState(filters.location);
+
+  // Debounce for search
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (filters.search !== searchInput) {
+        setFilters(prev => ({ ...prev, search: searchInput }));
+      }
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchInput]);
+
+  // Debounce for location
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (filters.location !== locationInput) {
+        setFilters(prev => ({ ...prev, location: locationInput }));
+      }
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [locationInput]);
+
   // Fetch hotels (initial and paginated)
   const fetchHotels = useCallback(async (reset = false) => {
     setLoading(true);
@@ -239,8 +263,8 @@ export default function HotelsPage() {
                   <Input
                     placeholder="Where are you going?"
                     className="pl-12 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-                    value={filters.location}
-                    onChange={(e) => updateFilter("location", e.target.value)}
+                    value={locationInput}
+                    onChange={(e) => setLocationInput(e.target.value)}
                   />
                 </div>
                 <div className="relative">
@@ -302,8 +326,8 @@ export default function HotelsPage() {
                     <h3 className="font-medium text-gray-900 mb-3">Search Hotels</h3>
                     <Input
                       placeholder="Search hotel names..."
-                      value={filters.search}
-                      onChange={(e) => updateFilter("search", e.target.value)}
+                      value={searchInput}
+                      onChange={(e) => setSearchInput(e.target.value)}
                       className="w-full"
                     />
                   </div>

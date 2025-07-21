@@ -48,6 +48,30 @@ export default function AdminHotelsPage() {
     const LIMIT = 20;
     const lastHotelCreatedAtRef = useRef<Date | null>(null);
 
+    // Debounced search and location input states
+    const [searchInput, setSearchInput] = useState(filters.search);
+    const [locationInput, setLocationInput] = useState(filters.location);
+
+    // Debounce for search
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            if (filters.search !== searchInput) {
+                setFilters(prev => ({ ...prev, search: searchInput }));
+            }
+        }, 300);
+        return () => clearTimeout(handler);
+    }, [searchInput]);
+
+    // Debounce for location
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            if (filters.location !== locationInput) {
+                setFilters(prev => ({ ...prev, location: locationInput }));
+            }
+        }, 500);
+        return () => clearTimeout(handler);
+    }, [locationInput]);
+
     // Update fetchHotels to use filters
     useEffect(() => {
         setPageCursors([null]);
@@ -254,14 +278,14 @@ export default function AdminHotelsPage() {
                         <h3 className="font-semibold text-lg mb-4">Filter Hotels</h3>
                         <Input
                             placeholder="Search hotel names..."
-                            value={filters.search}
-                            onChange={e => handleFilterChange('search', e.target.value)}
+                            value={searchInput}
+                            onChange={e => setSearchInput(e.target.value)}
                             className="mb-4"
                         />
                         <Input
                             placeholder="Location (city/region)"
-                            value={filters.location}
-                            onChange={e => handleFilterChange('location', e.target.value)}
+                            value={locationInput}
+                            onChange={e => setLocationInput(e.target.value)}
                             className="mb-4"
                         />
                         <div className="mb-4">
