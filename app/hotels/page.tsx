@@ -23,6 +23,7 @@ export default function HotelsPage() {
   const [error, setError] = useState("");
   const [hasMore, setHasMore] = useState(true);
   const [lastHotelCreatedAt, setLastHotelCreatedAt] = useState<Date | null>(null);
+  const [locations, setLocations] = useState<string[]>([]); // NEW: state for locations
   type Filters = {
     search: string;
     amenities: string[];
@@ -40,10 +41,8 @@ export default function HotelsPage() {
   const [showAmenitiesDropdown, setShowAmenitiesDropdown] = useState(false);
   const observer = useRef<IntersectionObserver | null>(null);
   const LIMIT = 12;
-
-  // Debounced search and location input states
+  // Debounced search input state
   const [searchInput, setSearchInput] = useState(filters.search);
-  const [locationInput, setLocationInput] = useState(filters.location);
 
   // Debounce for search
   useEffect(() => {
@@ -54,16 +53,6 @@ export default function HotelsPage() {
     }, 500);
     return () => clearTimeout(handler);
   }, [searchInput]);
-
-  // Debounce for location
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      if (filters.location !== locationInput) {
-        setFilters(prev => ({ ...prev, location: locationInput }));
-      }
-    }, 300);
-    return () => clearTimeout(handler);
-  }, [locationInput]);
 
   // Fetch hotels (initial and paginated)
   const fetchHotels = useCallback(async (reset = false) => {
@@ -111,6 +100,14 @@ export default function HotelsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 
+  // Fetch unique locations for dropdown
+  useEffect(() => {
+    fetch('/api/hotels/locations')
+      .then(res => res.json())
+      .then(data => setLocations(data))
+      .catch(() => setLocations([]));
+  }, []);
+
   // Infinite scroll observer
   const lastHotelRef = useCallback(
     (node: HTMLDivElement | null) => {
@@ -153,7 +150,7 @@ export default function HotelsPage() {
         if (!hasAllAmenities) return false;
       }
       // Location filter
-      if (filters.location && !hotel.location.toLowerCase().includes(filters.location.toLowerCase())) {
+      if (filters.location && filters.location !== "all" && !hotel.location.toLowerCase().includes(filters.location.toLowerCase())) {
         return false;
       }
       // Hotel type filter
@@ -259,13 +256,21 @@ export default function HotelsPage() {
             <CardContent className="p-6 sm:p-8">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <Input
-                    placeholder="Where are you going?"
-                    className="pl-12 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-                    value={locationInput}
-                    onChange={(e) => setLocationInput(e.target.value)}
-                  />
+                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 z-10" />
+                  <Select
+                    value={filters.location || "all"}
+                    onValueChange={value => updateFilter('location', value === "all" ? "" : value)}
+                  >
+                    <SelectTrigger className="pl-12 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500">
+                      <SelectValue placeholder="Where are you going?" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Locations</SelectItem>
+                      {locations.map(loc => (
+                        <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="relative">
                   <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
