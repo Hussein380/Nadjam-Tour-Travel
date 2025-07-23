@@ -21,13 +21,15 @@ export default function PackagesPage() {
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [locations, setLocations] = useState<string[]>([]); // NEW: state for locations
   const [filters, setFilters] = useState({
     search: "",
     category: "all",
     duration: "all",
     priceRange: "all",
     difficulty: "all",
-    groupSize: "all"
+    groupSize: "all",
+    location: "all", // NEW: location filter
   });
 
   const ITEMS_PER_PAGE = 6;
@@ -47,6 +49,14 @@ export default function PackagesPage() {
       }
     };
     fetchPackages();
+  }, []);
+
+  // Fetch unique locations for dropdown
+  useEffect(() => {
+    fetch('/api/packages/locations')
+      .then(res => res.json())
+      .then(data => setLocations(data))
+      .catch(() => setLocations([]));
   }, []);
 
   // Calculate dynamic filter data
@@ -89,7 +99,10 @@ export default function PackagesPage() {
         !pkg.location.toLowerCase().includes(filters.search.toLowerCase())) {
         return false;
       }
-
+      // Location filter
+      if (filters.location !== "all" && pkg.location !== filters.location) {
+        return false;
+      }
       // Category filter
       if (filters.category !== "all" && pkg.category !== filters.category) {
         return false;
@@ -215,30 +228,18 @@ export default function PackagesPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
             <CardContent className="p-6 sm:p-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Search by package name */}
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <Input
-                    placeholder="Search destinations..."
+                    placeholder="Search packages..."
                     className="pl-12 h-12 border-gray-200 focus:border-emerald-500 focus:ring-emerald-500"
                     value={filters.search}
                     onChange={(e) => updateFilter("search", e.target.value)}
                   />
                 </div>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <Select value={filters.duration} onValueChange={(value) => updateFilter("duration", value)}>
-                    <SelectTrigger className="pl-12 h-12 border-gray-200 focus:border-emerald-500 focus:ring-emerald-500">
-                      <SelectValue placeholder="Duration" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Durations</SelectItem>
-                      <SelectItem value="1-3">1-3 Days</SelectItem>
-                      <SelectItem value="4-7">4-7 Days</SelectItem>
-                      <SelectItem value="8+">8+ Days</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                {/* Group Size Dropdown */}
                 <div className="relative">
                   <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <Select value={filters.groupSize} onValueChange={(value) => updateFilter("groupSize", value)}>
@@ -254,20 +255,7 @@ export default function PackagesPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <Select value={filters.priceRange} onValueChange={(value) => updateFilter("priceRange", value)}>
-                    <SelectTrigger className="pl-12 h-12 border-gray-200 focus:border-emerald-500 focus:ring-emerald-500">
-                      <SelectValue placeholder="Price Range" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Prices</SelectItem>
-                      <SelectItem value="0-1500">Under $1,500</SelectItem>
-                      <SelectItem value="1500-2500">$1,500 - $2,500</SelectItem>
-                      <SelectItem value="2500+">$2,500+</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                {/* Search Button */}
                 <Button className="h-12 bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white font-medium text-lg">
                   <Search className="w-5 h-5 mr-2" />
                   Search
@@ -297,8 +285,7 @@ export default function PackagesPage() {
                     <h3 className="font-medium text-gray-900 mb-3">Categories</h3>
                     <div className="space-y-2">
                       <div
-                        className={`flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${filters.category === "all" ? "bg-emerald-50 border border-emerald-200" : ""
-                          }`}
+                        className={`flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${filters.category === "all" ? "bg-emerald-50 border border-emerald-200" : ""}`}
                         onClick={() => updateFilter("category", "all")}
                       >
                         <div className="flex items-center">
@@ -312,8 +299,7 @@ export default function PackagesPage() {
                       {Object.entries(filterData.categories).map(([category, count]) => (
                         <div
                           key={category}
-                          className={`flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${filters.category === category ? "bg-emerald-50 border border-emerald-200" : ""
-                            }`}
+                          className={`flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${filters.category === category ? "bg-emerald-50 border border-emerald-200" : ""}`}
                           onClick={() => updateFilter("category", category)}
                         >
                           <div className="flex items-center">
@@ -327,72 +313,30 @@ export default function PackagesPage() {
                       ))}
                     </div>
                   </div>
-
-                  {/* Duration */}
+                  {/* Location Dropdown (dynamic) */}
                   <div>
-                    <h3 className="font-medium text-gray-900 mb-3">Duration</h3>
-                    <div className="space-y-2">
-                      <div
-                        className={`flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${filters.duration === "all" ? "bg-emerald-50 border border-emerald-200" : ""
-                          }`}
-                        onClick={() => updateFilter("duration", "all")}
-                      >
-                        <span className="text-sm text-gray-700">All Durations</span>
-                        <Badge variant="secondary" className="text-xs">
-                          {allPackages.length}
-                        </Badge>
-                      </div>
-                      {Object.entries(filterData.durations).map(([duration, count]) => (
-                        <div
-                          key={duration}
-                          className={`flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${filters.duration === duration ? "bg-emerald-50 border border-emerald-200" : ""
-                            }`}
-                          onClick={() => updateFilter("duration", duration)}
-                        >
-                          <span className="text-sm text-gray-700">{duration}</span>
-                          <Badge variant="secondary" className="text-xs">
-                            {count}
-                          </Badge>
-                        </div>
-                      ))}
-                    </div>
+                    <h3 className="font-medium text-gray-900 mb-3">Location</h3>
+                    <Select
+                      value={filters.location}
+                      onValueChange={value => updateFilter('location', value)}
+                    >
+                      <SelectTrigger className="w-full h-12 border-gray-200 focus:border-emerald-500 focus:ring-emerald-500">
+                        <SelectValue placeholder="All Locations" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Locations</SelectItem>
+                        {locations.map(loc => (
+                          <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-
-                  {/* Price Range */}
-                  <div>
-                    <h3 className="font-medium text-gray-900 mb-3">Price Range</h3>
-                    <div className="space-y-2">
-                      {Object.entries(filterData.priceRanges).map(([range, count]) => (
-                        <div
-                          key={range}
-                          className={`flex items-center p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${filters.priceRange === range ? "bg-emerald-50 border border-emerald-200" : ""
-                            }`}
-                          onClick={() => updateFilter("priceRange", range)}
-                        >
-                          <input
-                            type="radio"
-                            name="priceRange"
-                            checked={filters.priceRange === range}
-                            onChange={() => updateFilter("priceRange", range)}
-                            className="mr-3"
-                          />
-                          <span className="text-sm text-gray-700">
-                            {range === "all" ? "All Prices" :
-                              range === "0-1500" ? "Under $1,500" :
-                                range === "1500-2500" ? "$1,500 - $2,500" : "$2,500+"}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
                   {/* Difficulty Level */}
                   <div>
                     <h3 className="font-medium text-gray-900 mb-3">Difficulty Level</h3>
                     <div className="space-y-2">
                       <div
-                        className={`flex items-center p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${filters.difficulty === "all" ? "bg-emerald-50 border border-emerald-200" : ""
-                          }`}
+                        className={`flex items-center p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${filters.difficulty === "all" ? "bg-emerald-50 border border-emerald-200" : ""}`}
                         onClick={() => updateFilter("difficulty", "all")}
                       >
                         <input
@@ -407,8 +351,7 @@ export default function PackagesPage() {
                       {Object.entries(filterData.difficulties).map(([difficulty, count]) => (
                         <div
                           key={difficulty}
-                          className={`flex items-center p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${filters.difficulty === difficulty ? "bg-emerald-50 border border-emerald-200" : ""
-                            }`}
+                          className={`flex items-center p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${filters.difficulty === difficulty ? "bg-emerald-50 border border-emerald-200" : ""}`}
                           onClick={() => updateFilter("difficulty", difficulty)}
                         >
                           <input
