@@ -30,6 +30,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@radix-ui/react-label';
+import { LocationDropdown } from './LocationDropdown';
 
 const formSchema = z.object({
     name: z.string().min(2, 'Name must be at least 2 characters.'),
@@ -300,7 +301,7 @@ export default function HotelForm({ initialData }: HotelFormProps) {
                             <FormItem>
                                 <FormLabel>Location</FormLabel>
                                 <FormControl>
-                                    <Input placeholder="e.g., New York, USA" {...field} />
+                                    <LocationDropdown {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>

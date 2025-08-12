@@ -31,6 +31,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@radix-ui/react-label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { LocationDropdown } from './LocationDropdown';
 
 const formSchema = z.object({
     slug: z.string().min(2, 'Slug must be at least 2 characters.'),
@@ -285,7 +286,7 @@ export default function PackageForm({ initialData }: PackageFormProps) {
                             <FormItem>
                                 <FormLabel>Location</FormLabel>
                                 <FormControl>
-                                    <Input placeholder="e.g., Bali, Indonesia" {...field} />
+                                    <LocationDropdown {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>

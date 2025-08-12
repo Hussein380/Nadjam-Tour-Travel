@@ -33,6 +33,34 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
                                     Admin
                                 </h1>
                             </Link>
+
+                            {/* Navigation Menu */}
+                            <nav className="hidden md:flex items-center space-x-6 ml-8">
+                                <Link
+                                    href="/admin"
+                                    className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                                >
+                                    Dashboard
+                                </Link>
+                                <Link
+                                    href="/admin/hotels"
+                                    className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                                >
+                                    Hotels
+                                </Link>
+                                <Link
+                                    href="/admin/packages"
+                                    className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                                >
+                                    Packages
+                                </Link>
+                                <Link
+                                    href="/admin/test-location"
+                                    className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                                >
+                                    Test Location
+                                </Link>
+                            </nav>
                         </div>
                         <div className="flex items-center space-x-4">
                             {user && (
