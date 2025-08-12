@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -12,6 +12,7 @@ import { Navigation, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
+import { useFeaturedPackages } from "@/hooks/useApi";
 // import { ChatBot } from "@/components/ChatBot"
 
 // Hero images for carousel
@@ -63,8 +64,9 @@ const stats = [
 export default function HomePage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [imagesLoaded, setImagesLoaded] = useState(false)
-  const [featuredPackages, setFeaturedPackages] = useState([])
-  const [loadingFeatured, setLoadingFeatured] = useState(true)
+
+  // Use React Query hook instead of useEffect + fetch
+  const { data: featuredPackages = [], isLoading: loadingFeatured, error: featuredError } = useFeaturedPackages();
 
   // Auto-advance carousel
   useEffect(() => {
@@ -89,23 +91,6 @@ export default function HomePage() {
       .then(() => setImagesLoaded(true))
       .catch(() => setImagesLoaded(true)) // Still show content even if images fail
   }, [])
-
-  // Fetch featured packages from API
-  useEffect(() => {
-    const fetchFeatured = async () => {
-      try {
-        const res = await fetch('/api/packages?featured=true');
-        if (!res.ok) throw new Error('Failed to fetch featured packages');
-        const data = await res.json();
-        setFeaturedPackages(data);
-      } catch (err) {
-        setFeaturedPackages([]);
-      } finally {
-        setLoadingFeatured(false);
-      }
-    };
-    fetchFeatured();
-  }, []);
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % heroImages.length)

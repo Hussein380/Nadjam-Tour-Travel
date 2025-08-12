@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -12,37 +12,32 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { Button } from "@/components/ui/button";
 import BookingFormModal from "@/components/BookingFormModal";
+import { useHotel } from "@/hooks/useApi";
 
 export default function HotelDetailsPage() {
     const params = useParams();
-    const hotelId = params?.id;
-    const [hotel, setHotel] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
+    const hotelId = params?.id as string;
     const [bookingModalOpen, setBookingModalOpen] = useState(false);
 
-    useEffect(() => {
-        if (!hotelId) return;
-        const fetchHotel = async () => {
-            try {
-                const res = await fetch(`/api/hotels/${hotelId}`);
-                if (!res.ok) throw new Error("Failed to fetch hotel");
-                const data = await res.json();
-                setHotel(data);
-            } catch (err) {
-                setError("Failed to load hotel");
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchHotel();
-    }, [hotelId]);
+    // Use React Query hook instead of useEffect + fetch
+    const { data: hotel, isLoading, error, isError } = useHotel(hotelId);
 
-    if (loading) {
-        return <div className="flex items-center justify-center h-64">Loading...</div>;
+    // Loading state
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-64">
+                <div className="w-8 h-8 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+        );
     }
-    if (error || !hotel) {
-        return <div className="flex items-center justify-center h-64 text-red-500">{error || "Hotel not found."}</div>;
+
+    // Error state
+    if (isError || !hotel) {
+        return (
+            <div className="flex items-center justify-center h-64 text-red-500">
+                {error?.message || "Hotel not found."}
+            </div>
+        );
     }
 
     return (
@@ -147,15 +142,17 @@ export default function HotelDetailsPage() {
                                 <tr className="bg-gray-100">
                                     <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Type</th>
                                     <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Beds</th>
+                                    <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Capacity</th>
                                     <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Price</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {hotel.roomTypes.map((room, idx) => (
-                                    <tr key={idx} className="border-t border-gray-200">
-                                        <td className="px-4 py-2 text-gray-900">{room.type || '-'}</td>
-                                        <td className="px-4 py-2 text-gray-700">{room.beds || '-'}</td>
-                                        <td className="px-4 py-2 text-green-700 font-semibold">{room.price ? `$${room.price}` : '-'}</td>
+                                {hotel.roomTypes.map((room, i) => (
+                                    <tr key={i} className="border-t border-gray-200">
+                                        <td className="px-4 py-2 text-sm text-gray-700">{room.type}</td>
+                                        <td className="px-4 py-2 text-sm text-gray-700">{room.beds}</td>
+                                        <td className="px-4 py-2 text-sm text-gray-700">{room.capacity}</td>
+                                        <td className="px-4 py-2 text-sm text-gray-700">${room.price}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -163,45 +160,38 @@ export default function HotelDetailsPage() {
                     </div>
                 </div>
             )}
-            {/* Guest Reviews (optional placeholder) */}
-            {hotel.reviewsList && hotel.reviewsList.length > 0 && (
-                <div className="mb-6">
-                    <h2 className="text-xl font-semibold mb-2">Guest Reviews</h2>
-                    {/* TODO: Render guest reviews */}
-                    <div className="text-gray-500">Guest reviews coming soon...</div>
-                </div>
-            )}
-            {/* Map/Location (optional placeholder) */}
-            {hotel.mapEmbedUrl && (
-                <div className="mb-6">
-                    <h2 className="text-xl font-semibold mb-2">Location</h2>
-                    {/* TODO: Render map embed */}
-                    <iframe
-                        src={hotel.mapEmbedUrl}
-                        width="100%"
-                        height="300"
-                        style={{ border: 0 }}
-                        allowFullScreen={true}
-                        loading="lazy"
-                        referrerPolicy="no-referrer-when-downgrade"
-                        className="rounded-lg"
-                    ></iframe>
-                </div>
-            )}
-            {/* Book Now Button */}
-            <div className="flex justify-center mt-8">
+
+            {/* Booking Button */}
+            <div className="mb-8">
                 <Button
-                    className="bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white px-8 py-3 text-lg font-semibold"
-                    onClick={() => setBookingModalOpen(true)}
+                    onClick={() => {
+                        console.log('Book Now clicked!');
+                        console.log('Current bookingModalOpen state:', bookingModalOpen);
+                        setBookingModalOpen(true);
+                        console.log('Set bookingModalOpen to true');
+                    }}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-lg text-lg font-semibold"
                 >
                     Book Now
                 </Button>
             </div>
-            <BookingFormModal
-                open={bookingModalOpen}
-                onClose={() => setBookingModalOpen(false)}
-                hotelName={hotel.name}
-            />
+
+            {/* Debug info */}
+            <div className="mb-4 text-sm text-gray-500">
+                Debug: bookingModalOpen = {bookingModalOpen.toString()}
+            </div>
+
+            {/* Booking Modal */}
+            {bookingModalOpen && (
+                <BookingFormModal
+                    open={bookingModalOpen}
+                    onClose={() => {
+                        console.log('Closing modal');
+                        setBookingModalOpen(false);
+                    }}
+                    hotelName={hotel.name}
+                />
+            )}
         </div>
     );
 } 

@@ -12,7 +12,14 @@ export async function GET() {
             }
         });
         const locations = Array.from(locationsSet).sort();
-        return NextResponse.json(locations, { status: 200 });
+
+        // Add cache headers - locations change less frequently
+        return NextResponse.json(locations, {
+            status: 200,
+            headers: {
+                'Cache-Control': 'public, s-maxage=1800, stale-while-revalidate=3600'
+            }
+        });
     } catch (error) {
         return NextResponse.json({ error: 'Failed to fetch locations' }, { status: 500 });
     }

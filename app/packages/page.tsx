@@ -1,27 +1,26 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Search, Filter, MapPin, Calendar, Users, Star, Globe, Award, Compass, Package } from "lucide-react"
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
+import { usePackageLocations } from "@/hooks/useApi";
+import { Search, Filter, MapPin, Calendar, Users, Star, Globe, Award, Compass, Package } from "lucide-react";
 import Link from "next/link";
 
 export default function PackagesPage() {
-  const [allPackages, setAllPackages] = useState([]);
-  const [displayedPackages, setDisplayedPackages] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [locations, setLocations] = useState<string[]>([]); // NEW: state for locations
+  const [locations, setLocations] = useState<string[]>([]); // keep for dropdown
   const [filters, setFilters] = useState({
     search: "",
     category: "all",
@@ -31,135 +30,125 @@ export default function PackagesPage() {
     groupSize: "all",
     location: "all", // NEW: location filter
   });
-
   const ITEMS_PER_PAGE = 6;
 
-  // Fetch all packages
-  useEffect(() => {
-    const fetchPackages = async () => {
-      try {
-        const res = await fetch("/api/packages?active=true");
-        if (!res.ok) throw new Error("Failed to fetch packages");
-        const data = await res.json();
-        setAllPackages(data);
-      } catch (err) {
-        setError("Failed to load packages");
-      } finally {
-        setLoading(false);
+  // Use React Query hook for locations only
+  const { data: packageLocations = [] } = usePackageLocations();
+
+  // React Query: Infinite Query for packages
+  const {
+    data,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    isFetchingNextPage,
+    refetch,
+    isLoading,
+  } = useInfiniteQuery<any[], Error>({
+    queryKey: ["packages", filters],
+    queryFn: async ({ pageParam }) => {
+      let url = `/api/packages?active=true&limit=${ITEMS_PER_PAGE}`;
+      if (typeof pageParam === 'string') {
+        url += `&startAfter=${encodeURIComponent(pageParam)}`;
       }
-    };
-    fetchPackages();
-  }, []);
+      if (filters.search) url += `&search=${encodeURIComponent(filters.search)}`;
+      if (filters.location && filters.location !== "all") url += `&location=${encodeURIComponent(filters.location)}`;
+      if (filters.category && filters.category !== "all") url += `&category=${encodeURIComponent(filters.category)}`;
+      if (filters.difficulty && filters.difficulty !== "all") url += `&difficulty=${encodeURIComponent(filters.difficulty)}`;
+      // Add more filters as needed
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Failed to fetch packages");
+      const data = await res.json();
+      return data;
+    },
+    getNextPageParam: (lastPage) => {
+      if (!lastPage || lastPage.length < ITEMS_PER_PAGE) return undefined;
+      return lastPage[lastPage.length - 1].createdAt;
+    },
+    initialPageParam: undefined,
+  });
 
-  // Fetch unique locations for dropdown
-  useEffect(() => {
-    fetch('/api/packages/locations')
-      .then(res => res.json())
-      .then(data => setLocations(data))
-      .catch(() => setLocations([]));
-  }, []);
+  // Combine all packages from pages
+  const packages = useMemo(() =>
+    data?.pages ? data.pages.flat() : [],
+    [data]
+  );
 
-  // Calculate dynamic filter data
-  const filterData = useMemo(() => {
-    const categories = allPackages.reduce((acc, pkg) => {
-      const category = pkg.category;
-      acc[category] = (acc[category] || 0) + 1;
-      return acc;
-    }, {});
-
-    const durations = allPackages.reduce((acc, pkg) => {
-      const duration = pkg.duration;
-      acc[duration] = (acc[duration] || 0) + 1;
-      return acc;
-    }, {});
-
-    const difficulties = allPackages.reduce((acc, pkg) => {
-      const difficulty = pkg.difficulty;
-      acc[difficulty] = (acc[difficulty] || 0) + 1;
-      return acc;
-    }, {});
-
-    const priceRanges = allPackages.reduce((acc, pkg) => {
-      let range = "all";
-      if (pkg.price < 1500) range = "0-1500";
-      else if (pkg.price < 2500) range = "1500-2500";
-      else range = "2500+";
-      acc[range] = (acc[range] || 0) + 1;
-      return acc;
-    }, {});
-
-    return { categories, durations, difficulties, priceRanges };
-  }, [allPackages]);
-
-  // Filter packages based on current filters
-  const filteredPackages = useMemo(() => {
-    return allPackages.filter(pkg => {
-      // Search filter
-      if (filters.search && !pkg.title.toLowerCase().includes(filters.search.toLowerCase()) &&
-        !pkg.location.toLowerCase().includes(filters.search.toLowerCase())) {
-        return false;
-      }
-      // Location filter
-      if (filters.location !== "all" && pkg.location !== filters.location) {
-        return false;
-      }
-      // Category filter
-      if (filters.category !== "all" && pkg.category !== filters.category) {
-        return false;
-      }
-
-      // Duration filter
-      if (filters.duration !== "all") {
-        const duration = pkg.duration;
-        if (filters.duration === "1-3" && !duration.includes("1") && !duration.includes("2") && !duration.includes("3")) {
-          return false;
+  // Infinite scroll observer
+  const observer = useRef<IntersectionObserver | null>(null);
+  const lastPackageRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (isFetchingNextPage) return;
+      if (observer.current) observer.current.disconnect();
+      observer.current = new window.IntersectionObserver(entries => {
+        if (entries[0].isIntersecting && hasNextPage) {
+          fetchNextPage();
         }
-        if (filters.duration === "4-7" && !duration.includes("4") && !duration.includes("5") && !duration.includes("6") && !duration.includes("7")) {
-          return false;
-        }
-        if (filters.duration === "8+" && !duration.includes("8") && !duration.includes("9") && !duration.includes("10")) {
-          return false;
-        }
-      }
+      });
+      if (node) observer.current.observe(node);
+    },
+    [isFetchingNextPage, fetchNextPage, hasNextPage]
+  );
 
-      // Price range filter
-      if (filters.priceRange !== "all") {
-        if (filters.priceRange === "0-1500" && pkg.price >= 1500) return false;
-        if (filters.priceRange === "1500-2500" && (pkg.price < 1500 || pkg.price >= 2500)) return false;
-        if (filters.priceRange === "2500+" && pkg.price < 2500) return false;
-      }
-
-      // Difficulty filter
-      if (filters.difficulty !== "all" && pkg.difficulty !== filters.difficulty) {
-        return false;
-      }
-
-      return true;
-    });
-  }, [allPackages, filters]);
-
-  // Paginate filtered packages
+  // Refetch when filters change
   useEffect(() => {
-    const startIndex = 0;
-    const endIndex = page * ITEMS_PER_PAGE;
-    setDisplayedPackages(filteredPackages.slice(startIndex, endIndex));
-    setHasMore(endIndex < filteredPackages.length);
-  }, [filteredPackages, page]);
+    refetch();
+  }, [filters, refetch]);
 
-  // Reset page when filters change
+  // Update locations when React Query data is available
   useEffect(() => {
-    setPage(1);
-  }, [filters]);
+    if (packageLocations.length > 0) {
+      setLocations(packageLocations);
+    }
+  }, [packageLocations]);
 
-  const loadMore = () => {
-    setPage(prev => prev + 1);
-  };
-
-  const updateFilter = (key, value) => {
+  const updateFilter = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
 
-  if (loading) {
+  // Generate filter lists from the main package data (original working logic)
+  const categoryList = useMemo(() => {
+    const categories = new Set<string>();
+    packages.forEach(pkg => {
+      if (pkg.category) {
+        categories.add(pkg.category);
+      }
+    });
+    return ["all", ...Array.from(categories).sort()];
+  }, [packages]);
+
+  const difficultyList = useMemo(() => {
+    const difficulties = new Set<string>();
+    packages.forEach(pkg => {
+      if (pkg.difficulty) {
+        difficulties.add(pkg.difficulty);
+      }
+    });
+    return ["all", ...Array.from(difficulties).sort()];
+  }, [packages]);
+
+  const durationList = useMemo(() => {
+    const durations = new Set<string>();
+    packages.forEach(pkg => {
+      if (pkg.duration) {
+        durations.add(pkg.duration);
+      }
+    });
+    return ["all", ...Array.from(durations).sort()];
+  }, [packages]);
+
+  const groupSizeList = useMemo(() => {
+    const groupSizes = new Set<string>();
+    packages.forEach(pkg => {
+      if (pkg.groupSize) {
+        groupSizes.add(pkg.groupSize);
+      }
+    });
+    return ["all", ...Array.from(groupSizes).sort()];
+  }, [packages]);
+
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="w-8 h-8 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
@@ -170,7 +159,7 @@ export default function PackagesPage() {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-red-500 text-lg">{error}</p>
+        <p className="text-red-500 text-lg">{error.message}</p>
       </div>
     );
   }
@@ -282,36 +271,22 @@ export default function PackagesPage() {
                 <CardContent className="space-y-6">
                   {/* Categories */}
                   <div>
-                    <h3 className="font-medium text-gray-900 mb-3">Categories</h3>
-                    <div className="space-y-2">
-                      <div
-                        className={`flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${filters.category === "all" ? "bg-emerald-50 border border-emerald-200" : ""}`}
-                        onClick={() => updateFilter("category", "all")}
-                      >
-                        <div className="flex items-center">
-                          <Globe className="w-4 h-4 mr-2 text-gray-500" />
-                          <span className="text-sm text-gray-700">All Packages</span>
-                        </div>
-                        <Badge variant="secondary" className="text-xs">
-                          {allPackages.length}
-                        </Badge>
-                      </div>
-                      {Object.entries(filterData.categories).map(([category, count]) => (
-                        <div
-                          key={category}
-                          className={`flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${filters.category === category ? "bg-emerald-50 border border-emerald-200" : ""}`}
-                          onClick={() => updateFilter("category", category)}
-                        >
-                          <div className="flex items-center">
-                            <MapPin className="w-4 h-4 mr-2 text-gray-500" />
-                            <span className="text-sm text-gray-700">{category}</span>
-                          </div>
-                          <Badge variant="secondary" className="text-xs">
-                            {count}
-                          </Badge>
-                        </div>
-                      ))}
-                    </div>
+                    <h3 className="font-medium text-gray-900 mb-3">Category</h3>
+                    <Select
+                      value={filters.category}
+                      onValueChange={value => updateFilter('category', value)}
+                    >
+                      <SelectTrigger className="w-full h-12 border-gray-200 focus:border-emerald-500 focus:ring-emerald-500">
+                        <SelectValue placeholder="All Categories" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categoryList.map(category => (
+                          <SelectItem key={category} value={category}>
+                            {category === 'all' ? 'All Categories' : category}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   {/* Location Dropdown (dynamic) */}
                   <div>
@@ -331,40 +306,44 @@ export default function PackagesPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  {/* Difficulty Level */}
+                  {/* Duration */}
                   <div>
-                    <h3 className="font-medium text-gray-900 mb-3">Difficulty Level</h3>
-                    <div className="space-y-2">
+                    <h3 className="font-semibold mb-2 mt-4">Duration</h3>
+                    {durationList.map(duration => (
                       <div
-                        className={`flex items-center p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${filters.difficulty === "all" ? "bg-emerald-50 border border-emerald-200" : ""}`}
-                        onClick={() => updateFilter("difficulty", "all")}
+                        key={duration}
+                        className={`flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${filters.duration === duration ? "bg-emerald-50 border border-emerald-200" : ""}`}
+                        onClick={() => updateFilter("duration", duration)}
                       >
-                        <input
-                          type="radio"
-                          name="difficulty"
-                          checked={filters.difficulty === "all"}
-                          onChange={() => updateFilter("difficulty", "all")}
-                          className="mr-3"
-                        />
-                        <span className="text-sm text-gray-700">All Levels</span>
+                        <span className="capitalize">{duration}</span>
                       </div>
-                      {Object.entries(filterData.difficulties).map(([difficulty, count]) => (
-                        <div
-                          key={difficulty}
-                          className={`flex items-center p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${filters.difficulty === difficulty ? "bg-emerald-50 border border-emerald-200" : ""}`}
-                          onClick={() => updateFilter("difficulty", difficulty)}
-                        >
-                          <input
-                            type="radio"
-                            name="difficulty"
-                            checked={filters.difficulty === difficulty}
-                            onChange={() => updateFilter("difficulty", difficulty)}
-                            className="mr-3"
-                          />
-                          <span className="text-sm text-gray-700">{difficulty}</span>
-                        </div>
-                      ))}
-                    </div>
+                    ))}
+                  </div>
+
+                  <div>
+                    <h3 className="font-semibold mb-2 mt-4">Group Size</h3>
+                    {groupSizeList.map(groupSize => (
+                      <div
+                        key={groupSize}
+                        className={`flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${filters.groupSize === groupSize ? "bg-emerald-50 border border-emerald-200" : ""}`}
+                        onClick={() => updateFilter("groupSize", groupSize)}
+                      >
+                        <span className="capitalize">{groupSize}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Difficulty */}
+                  <div>
+                    <h3 className="font-semibold mb-2 mt-4">Difficulty</h3>
+                    {difficultyList.map(difficulty => (
+                      <div
+                        key={difficulty}
+                        className={`flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${filters.difficulty === difficulty ? "bg-emerald-50 border border-emerald-200" : ""}`}
+                        onClick={() => updateFilter("difficulty", difficulty)}
+                      >
+                        <span className="capitalize">{difficulty}</span>
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
@@ -375,7 +354,7 @@ export default function PackagesPage() {
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2 className="text-2xl font-light text-gray-900">Travel Packages</h2>
-                  <p className="text-gray-600 mt-1">{filteredPackages.length} packages available</p>
+                  <p className="text-gray-600 mt-1">{packages.length} packages available</p>
                 </div>
                 <Select>
                   <SelectTrigger className="w-48">
@@ -391,7 +370,7 @@ export default function PackagesPage() {
                 </Select>
               </div>
 
-              {displayedPackages.length === 0 ? (
+              {packages.length === 0 ? (
                 <div className="text-center py-12">
                   <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No packages found</h3>
@@ -400,10 +379,11 @@ export default function PackagesPage() {
               ) : (
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {displayedPackages.map((pkg) => (
+                    {packages.map((pkg, index) => (
                       <Card
                         key={pkg.id}
                         className="overflow-hidden group hover:shadow-xl transition-all duration-300 border-0 shadow-lg"
+                        ref={index === packages.length - 1 ? lastPackageRef : undefined}
                       >
                         <div className="relative h-64 overflow-hidden">
                           {pkg.images && pkg.images.length > 0 ? (
@@ -415,7 +395,7 @@ export default function PackagesPage() {
                               slidesPerView={1}
                               className="rounded-t-lg overflow-hidden h-full"
                             >
-                              {pkg.images.map((url, idx) => (
+                              {pkg.images.map((url: string, idx: number) => (
                                 <SwiperSlide key={idx}>
                                   <div className="relative w-full h-64">
                                     <img
@@ -472,7 +452,7 @@ export default function PackagesPage() {
                           <div className="mb-4">
                             <h4 className="text-sm font-medium text-gray-900 mb-2">Package Highlights:</h4>
                             <div className="flex flex-wrap gap-1">
-                              {pkg.highlights.slice(0, 3).map((highlight, index) => (
+                              {pkg.highlights.slice(0, 3).map((highlight: string, index: number) => (
                                 <Badge key={index} variant="outline" className="text-xs">
                                   {highlight}
                                 </Badge>
@@ -499,6 +479,7 @@ export default function PackagesPage() {
                               <span className="text-sm text-gray-500">per person</span>
                             </div>
                             <Button asChild className="bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700 text-white">
+                              {/* Assuming pkg.slug is available */}
                               <Link href={`/packages/${pkg.slug}`}>
                                 View Details
                               </Link>
@@ -510,16 +491,14 @@ export default function PackagesPage() {
                   </div>
 
                   {/* Load More */}
-                  {hasMore && (
+                  {isFetchingNextPage && (
                     <div className="text-center mt-12">
-                      <Button
-                        variant="outline"
-                        size="lg"
-                        className="px-8 py-3 text-lg"
-                        onClick={loadMore}
-                      >
-                        Load More Packages
-                      </Button>
+                      <p className="text-gray-600">Loading more packages...</p>
+                    </div>
+                  )}
+                  {!hasNextPage && (
+                    <div className="text-center mt-12">
+                      <p className="text-gray-600">No more packages to load.</p>
                     </div>
                   )}
                 </>

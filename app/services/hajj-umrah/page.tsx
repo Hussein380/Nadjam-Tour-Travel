@@ -51,7 +51,7 @@ export default function Page() {
                 <div>
                   <CardTitle className="text-xl">Basic Hajj Package</CardTitle>
                   <p className="text-sm text-muted-foreground">For first-time pilgrims</p>
-                </div>
+            </div>
                 <Badge variant="outline">Starting from $1,200</Badge>
               </CardHeader>
               <CardContent>
@@ -86,7 +86,7 @@ export default function Page() {
                 <Button className="mt-4">Book Now</Button>
               </CardContent>
             </Card>
-          </div>
+                    </div>
         </TabsContent>
 
         <TabsContent value="umrah">
@@ -114,7 +114,7 @@ export default function Page() {
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <div>
+                  <div>
                   <CardTitle className="text-xl">VIP Umrah Package</CardTitle>
                   <p className="text-sm text-muted-foreground">For families and groups</p>
                 </div>
@@ -224,7 +224,7 @@ export default function Page() {
             <div>
               <CardTitle className="text-xl">Nadjam Travel</CardTitle>
               <p className="text-sm text-muted-foreground">Your trusted pilgrimage partner</p>
-            </div>
+        </div>
             <Badge variant="outline">Visit Us</Badge>
           </CardHeader>
           <CardContent>

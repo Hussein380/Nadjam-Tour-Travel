@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -16,14 +16,14 @@ import "swiper/css/pagination";
 import BookingFormModal from '@/components/BookingFormModal';
 import { Hotel } from '@/lib/types';
 import Link from "next/link";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { useHotelLocations } from "@/hooks/useApi";
 
 export default function HotelsPage() {
-  const [hotels, setHotels] = useState<Hotel[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [hasMore, setHasMore] = useState(true);
   const [lastHotelCreatedAt, setLastHotelCreatedAt] = useState<Date | null>(null);
-  const [locations, setLocations] = useState<string[]>([]); // NEW: state for locations
+  const [locations, setLocations] = useState<string[]>([]); // keep for dropdown
   type Filters = {
     search: string;
     amenities: string[];
@@ -44,6 +44,9 @@ export default function HotelsPage() {
   // Debounced search input state
   const [searchInput, setSearchInput] = useState(filters.search);
 
+  // Use React Query hook for locations only
+  const { data: hotelLocations = [] } = useHotelLocations();
+
   // Debounce for search
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -54,16 +57,23 @@ export default function HotelsPage() {
     return () => clearTimeout(handler);
   }, [searchInput]);
 
-  // Fetch hotels (initial and paginated)
-  const fetchHotels = useCallback(async (reset = false) => {
-    setLoading(true);
-    setError("");
-    try {
+  // React Query: Infinite Query for hotels
+  const {
+    data,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    isFetchingNextPage,
+    refetch,
+    isLoading,
+  } = useInfiniteQuery<Hotel[], Error>({
+    queryKey: ["hotels", filters],
+    queryFn: async ({ pageParam }) => {
       let url = `/api/hotels?active=true&limit=${LIMIT}`;
-      if (!reset && lastHotelCreatedAt) {
-        url += `&startAfter=${encodeURIComponent(lastHotelCreatedAt.toISOString())}`;
+      if (pageParam) {
+        url += `&startAfter=${encodeURIComponent(pageParam)}`;
       }
-      // Add filter params to API call
       if (filters.search) url += `&search=${encodeURIComponent(filters.search)}`;
       if (filters.amenities.length) url += `&amenities=${filters.amenities.join(',')}`;
       if (filters.hotelTypes.length) url += `&hotelTypes=${filters.hotelTypes.join(',')}`;
@@ -71,72 +81,70 @@ export default function HotelsPage() {
       const res = await fetch(url);
       if (!res.ok) throw new Error("Failed to fetch hotels");
       const data = await res.json();
-      if (reset) {
-        setHotels(data);
-      } else {
-        setHotels(prev => [...prev, ...data]);
-      }
-      if (data.length < LIMIT) {
-        setHasMore(false);
-      } else {
-        setHasMore(true);
-      }
-      if (data.length > 0) {
-        setLastHotelCreatedAt(new Date(data[data.length - 1].createdAt));
-      }
-    } catch (err) {
-      setError("Failed to load hotels");
-    } finally {
-      setLoading(false);
-    }
-  }, [lastHotelCreatedAt, filters]);
+      return data;
+    },
+    getNextPageParam: (lastPage) => {
+      if (!lastPage || lastPage.length < LIMIT) return undefined;
+      return lastPage[lastPage.length - 1].createdAt;
+    },
+  });
 
-  // Initial fetch and reset on filters change
-  useEffect(() => {
-    setHotels([]);
-    setLastHotelCreatedAt(null);
-    setHasMore(true);
-    fetchHotels(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters]);
-
-  // Fetch unique locations for dropdown
-  useEffect(() => {
-    fetch('/api/hotels/locations')
-      .then(res => res.json())
-      .then(data => setLocations(data))
-      .catch(() => setLocations([]));
-  }, []);
+  const hotels: Hotel[] = useMemo(
+    () => (data?.pages ? data.pages.flat() : []),
+    [data]
+  );
 
   // Infinite scroll observer
   const lastHotelRef = useCallback(
     (node: HTMLDivElement | null) => {
-      if (loading) return;
+      if (isFetchingNextPage) return;
       if (observer.current) observer.current.disconnect();
-      observer.current = new IntersectionObserver(entries => {
-        if (entries[0].isIntersecting && hasMore) {
-          fetchHotels();
+      observer.current = new window.IntersectionObserver(entries => {
+        if (entries[0].isIntersecting && hasNextPage) {
+          fetchNextPage();
         }
       });
       if (node) observer.current.observe(node);
     },
-    [loading, hasMore, fetchHotels]
+    [isFetchingNextPage, fetchNextPage, hasNextPage]
   );
 
-  // Calculate dynamic filter data
+  // Reset infinite query when filters change
+  useEffect(() => {
+    refetch();
+  }, [filters, refetch]);
+
+  // Update locations when React Query data is available
+  useEffect(() => {
+    if (hotelLocations.length > 0) {
+      setLocations(hotelLocations);
+    }
+  }, [hotelLocations]);
+
+  // Calculate dynamic filter data from the main hotel data (original working logic)
   const filterData: Record<string, any> = useMemo(() => {
-    const allAmenities = hotels.reduce((acc, hotel) => {
-      hotel.amenities.forEach(amenity => {
+    const allAmenities = hotels.reduce<Record<string, number>>((acc, hotel: Hotel) => {
+      hotel.amenities.forEach((amenity: string) => {
         acc[amenity] = (acc[amenity] || 0) + 1;
       });
       return acc;
     }, {});
-    return { allAmenities };
+
+    const allHotelTypes = hotels.reduce<Record<string, number>>((acc, hotel: Hotel) => {
+      if (hotel.types && Array.isArray(hotel.types)) {
+        hotel.types.forEach((type: string) => {
+          acc[type] = (acc[type] || 0) + 1;
+        });
+      }
+      return acc;
+    }, {});
+
+    return { allAmenities, allHotelTypes };
   }, [hotels]);
 
   // Filter hotels based on current filters
   const filteredHotels = useMemo(() => {
-    return hotels.filter(hotel => {
+    return hotels.filter((hotel: Hotel) => {
       // Search filter
       if (filters.search && !hotel.name.toLowerCase().includes(filters.search.toLowerCase()) &&
         !hotel.location.toLowerCase().includes(filters.search.toLowerCase())) {
@@ -144,7 +152,7 @@ export default function HotelsPage() {
       }
       // Amenities filter
       if (filters.amenities.length > 0) {
-        const hasAllAmenities = filters.amenities.every(amenity =>
+        const hasAllAmenities = filters.amenities.every((amenity: string) =>
           hotel.amenities.includes(amenity)
         );
         if (!hasAllAmenities) return false;
@@ -155,7 +163,7 @@ export default function HotelsPage() {
       }
       // Hotel type filter
       if (filters.hotelTypes.length > 0) {
-        if (!hotel.types || !Array.isArray(hotel.types) || !filters.hotelTypes.some(type => hotel.types && hotel.types.includes(type))) {
+        if (!hotel.types || !Array.isArray(hotel.types) || !filters.hotelTypes.some((type: string) => hotel.types && hotel.types.includes(type))) {
           return false;
         }
       }
@@ -193,7 +201,7 @@ export default function HotelsPage() {
     }));
   };
 
-  if (loading && hotels.length === 0) {
+  if (isLoading && hotels.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
@@ -204,7 +212,7 @@ export default function HotelsPage() {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-red-500 text-lg">{error}</p>
+        <p className="text-red-500 text-lg">{error.message}</p>
       </div>
     );
   }
@@ -417,7 +425,7 @@ export default function HotelsPage() {
                 </Select>
               </div>
 
-              {hotels.length === 0 && !loading ? (
+              {hotels.length === 0 && !isLoading ? (
                 <div className="text-center py-12">
                   <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -560,12 +568,12 @@ export default function HotelsPage() {
                       }
                     })}
                   </div>
-                  {loading && (
+                  {isFetchingNextPage && (
                     <div className="flex justify-center mt-8">
                       <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                     </div>
                   )}
-                  {!hasMore && hotels.length > 0 && (
+                  {!hasNextPage && hotels.length > 0 && (
                     <div className="text-center mt-8 text-gray-500">No more hotels to load.</div>
                   )}
                 </>

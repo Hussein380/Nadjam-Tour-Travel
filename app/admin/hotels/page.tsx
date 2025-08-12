@@ -329,114 +329,114 @@ export default function AdminHotelsPage() {
                 </div>
                 {/* Main Content: Hotel Grid + Pagination */}
                 <div className="flex-1">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {hotels.map((hotel) => (
-                            <Card key={hotel.id} className="relative flex flex-col justify-between">
-                                {(hotel.images && hotel.images.length > 0) ? (
-                                    <div className="relative w-full h-48 bg-gray-100">
-                                        <Swiper
-                                            modules={[Navigation, Pagination]}
-                                            navigation
-                                            pagination={{ clickable: true }}
-                                            spaceBetween={16}
-                                            slidesPerView={1}
-                                            className="rounded-t-lg overflow-hidden h-full"
-                                        >
-                                            {hotel.images.map((url, idx) => (
-                                                <SwiperSlide key={idx}>
-                                                    <div className="relative w-full h-48">
-                                                        <Image
-                                                            src={url}
-                                                            alt={`Hotel image ${idx + 1}`}
-                                                            fill
-                                                            className="object-cover"
-                                                        />
-                                                    </div>
-                                                </SwiperSlide>
-                                            ))}
-                                        </Swiper>
-                                    </div>
-                                ) : (
-                                    hotel.image ? (
-                                        <div className="relative w-full h-48 bg-gray-100">
-                                            <Image
-                                                src={hotel.image}
-                                                alt={hotel.name}
-                                                fill
-                                                className="object-cover rounded-t-lg"
-                                            />
-                                        </div>
-                                    ) : null
-                                )}
-                                <CardHeader>
-                                    <div className="flex justify-between items-start">
-                                        <div className="flex-1 mr-2">
-                                            <CardTitle className="text-lg leading-tight">{hotel.name}</CardTitle>
-                                            <p className="text-gray-500 text-sm mt-1">{hotel.location}</p>
-                                            {hotel.description && (
-                                                <p className="text-gray-700 text-sm mt-1 line-clamp-2">{hotel.description}</p>
-                                            )}
-                                        </div>
-                                        <div className="flex items-center space-x-2">
-                                            <Switch
-                                                id={`featured-${hotel.id}`}
-                                                checked={hotel.featured}
-                                                onCheckedChange={() => handleUpdate(hotel.id, { featured: !hotel.featured, active: hotel.active })}
-                                            />
-                                            <label htmlFor={`featured-${hotel.id}`}>
-                                                <Star className={`w-4 h-4 transition-colors ${hotel.featured ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
-                                            </label>
-                                        </div>
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="space-y-3">
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-2xl font-bold">${hotel.price}</span>
-                                        <Badge variant={hotel.active ? 'default' : 'secondary'}>
-                                            {hotel.active ? 'Active' : 'Inactive'}
-                                        </Badge>
-                                    </div>
-                                    <div className="flex items-center space-x-2 text-sm text-gray-500">
-                                        <span>Rating: {hotel.rating}/5</span>
-                                        <span>({hotel.reviews} reviews)</span>
-                                    </div>
-                                </CardContent>
-                                <div className="border-t p-4 flex justify-between items-center bg-gray-50">
-                                    {hotel.active ? (
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={() => handleUpdate(hotel.id, { active: false })}
-                                        >
-                                            Deactivate
-                                        </Button>
-                                    ) : (
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={() => handleUpdate(hotel.id, { active: true })}
-                                        >
-                                            Reactivate
-                                        </Button>
-                                    )}
-                                    <div className="flex items-center space-x-2">
-                                        <Button asChild size="icon" variant="ghost">
-                                            <Link href={`/admin/hotels/edit/${hotel.id}`}>
-                                                <Edit className="w-4 h-4" />
-                                            </Link>
-                                        </Button>
-                                        <Button
-                                            size="icon"
-                                            variant="ghost"
-                                            className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                                            onClick={() => handleDelete(hotel.id)}
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </Button>
-                                    </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {hotels.map((hotel) => (
+                    <Card key={hotel.id} className="relative flex flex-col justify-between">
+                        {(hotel.images && hotel.images.length > 0) ? (
+                            <div className="relative w-full h-48 bg-gray-100">
+                                <Swiper
+                                    modules={[Navigation, Pagination]}
+                                    navigation
+                                    pagination={{ clickable: true }}
+                                    spaceBetween={16}
+                                    slidesPerView={1}
+                                    className="rounded-t-lg overflow-hidden h-full"
+                                >
+                                    {hotel.images.map((url, idx) => (
+                                        <SwiperSlide key={idx}>
+                                            <div className="relative w-full h-48">
+                                                <Image
+                                                    src={url}
+                                                    alt={`Hotel image ${idx + 1}`}
+                                                    fill
+                                                    className="object-cover"
+                                                />
+                                            </div>
+                                        </SwiperSlide>
+                                    ))}
+                                </Swiper>
+                            </div>
+                        ) : (
+                            hotel.image ? (
+                                <div className="relative w-full h-48 bg-gray-100">
+                                    <Image
+                                        src={hotel.image}
+                                        alt={hotel.name}
+                                        fill
+                                        className="object-cover rounded-t-lg"
+                                    />
                                 </div>
-                            </Card>
-                        ))}
+                            ) : null
+                        )}
+                        <CardHeader>
+                            <div className="flex justify-between items-start">
+                                <div className="flex-1 mr-2">
+                                    <CardTitle className="text-lg leading-tight">{hotel.name}</CardTitle>
+                                    <p className="text-gray-500 text-sm mt-1">{hotel.location}</p>
+                                    {hotel.description && (
+                                        <p className="text-gray-700 text-sm mt-1 line-clamp-2">{hotel.description}</p>
+                                    )}
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <Switch
+                                        id={`featured-${hotel.id}`}
+                                        checked={hotel.featured}
+                                        onCheckedChange={() => handleUpdate(hotel.id, { featured: !hotel.featured, active: hotel.active })}
+                                    />
+                                    <label htmlFor={`featured-${hotel.id}`}>
+                                        <Star className={`w-4 h-4 transition-colors ${hotel.featured ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+                                    </label>
+                                </div>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                            <div className="flex justify-between items-center">
+                                <span className="text-2xl font-bold">${hotel.price}</span>
+                                <Badge variant={hotel.active ? 'default' : 'secondary'}>
+                                    {hotel.active ? 'Active' : 'Inactive'}
+                                </Badge>
+                            </div>
+                            <div className="flex items-center space-x-2 text-sm text-gray-500">
+                                <span>Rating: {hotel.rating}/5</span>
+                                <span>({hotel.reviews} reviews)</span>
+                            </div>
+                        </CardContent>
+                        <div className="border-t p-4 flex justify-between items-center bg-gray-50">
+                            {hotel.active ? (
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleUpdate(hotel.id, { active: false })}
+                                >
+                                    Deactivate
+                                </Button>
+                            ) : (
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleUpdate(hotel.id, { active: true })}
+                                >
+                                    Reactivate
+                                </Button>
+                            )}
+                            <div className="flex items-center space-x-2">
+                                <Button asChild size="icon" variant="ghost">
+                                    <Link href={`/admin/hotels/edit/${hotel.id}`}>
+                                        <Edit className="w-4 h-4" />
+                                    </Link>
+                                </Button>
+                                <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                                    onClick={() => handleDelete(hotel.id)}
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        </div>
+                    </Card>
+                ))}
                     </div>
                     {/* Pagination Controls */}
                     <div className="flex justify-center items-center gap-4 mt-8">

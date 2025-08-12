@@ -35,7 +35,8 @@ export async function GET(req: NextRequest) {
         const featured = searchParams.get('featured');
         const active = searchParams.get('active');
         const limit = parseInt(searchParams.get('limit') || '20');
-        const offset = parseInt(searchParams.get('offset') || '0');
+        const startAfter = searchParams.get('startAfter');
+        // Remove offset
 
         let query = db.collection('packages').where('active', '==', true);
 
@@ -67,7 +68,20 @@ export async function GET(req: NextRequest) {
             query = query.where('location_lower', '==', locationLower);
         }
 
-        const snapshot = await query.limit(limit).offset(offset).get();
+        // Add orderBy for cursor-based pagination
+        if (search) {
+            query = query.orderBy('title_lower').orderBy('createdAt', 'desc');
+        } else {
+            query = query.orderBy('createdAt', 'desc');
+        }
+
+        // Apply startAfter if provided
+        if (startAfter) {
+            const startAfterDate = new Date(startAfter);
+            query = query.startAfter(startAfterDate);
+        }
+
+        const snapshot = await query.limit(limit).get();
         const packages = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data(),
@@ -75,8 +89,14 @@ export async function GET(req: NextRequest) {
             updatedAt: doc.data().updatedAt?.toDate(),
         }));
 
-        return NextResponse.json(packages);
+        // Add cache headers for better performance
+        return NextResponse.json(packages, {
+            headers: {
+                'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
+            }
+        });
     } catch (error) {
+        console.error('API /api/packages error:', error);
         return NextResponse.json({ error: 'Failed to fetch packages' }, { status: 500 });
     }
 }

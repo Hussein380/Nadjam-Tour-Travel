@@ -104,7 +104,12 @@ export async function GET(req: NextRequest) {
 
     const snapshot = await query.limit(limit).get();
     if (snapshot.empty) {
-      return NextResponse.json([], { status: 200 });
+      return NextResponse.json([], {
+        status: 200,
+        headers: {
+          'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
+        }
+      });
     }
     const hotels = snapshot.docs.map(doc => ({
       id: doc.id,
@@ -112,7 +117,14 @@ export async function GET(req: NextRequest) {
       createdAt: doc.data().createdAt?.toDate(),
       updatedAt: doc.data().updatedAt?.toDate(),
     }));
-    return NextResponse.json(hotels, { status: 200 });
+
+    // Add cache headers for better performance
+    return NextResponse.json(hotels, {
+      status: 200,
+      headers: {
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
+      }
+    });
   } catch (error) {
     console.error('Error in GET /api/hotels:', error);
     return NextResponse.json({ error: 'A server error occurred while fetching hotels.' }, { status: 500 });

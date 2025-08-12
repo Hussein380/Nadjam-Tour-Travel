@@ -39,7 +39,12 @@ export async function GET(
             .get();
 
         if (snapshot.empty) {
-            return NextResponse.json({ error: 'Package not found' }, { status: 404 });
+            return NextResponse.json({ error: 'Package not found' }, {
+                status: 404,
+                headers: {
+                    'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
+                }
+            });
         }
 
         const doc = snapshot.docs[0];
@@ -50,7 +55,12 @@ export async function GET(
             updatedAt: doc.data()?.updatedAt?.toDate(),
         };
 
-        return NextResponse.json(packageData);
+        // Add cache headers for better performance
+        return NextResponse.json(packageData, {
+            headers: {
+                'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
+            }
+        });
     } catch (error) {
         return NextResponse.json({ error: 'Failed to fetch package' }, { status: 500 });
     }

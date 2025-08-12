@@ -7,7 +7,8 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    unoptimized: true,
+    domains: ['res.cloudinary.com'],
+    // unoptimized: true, // Removed to enable Next.js image optimization
   },
 }
 

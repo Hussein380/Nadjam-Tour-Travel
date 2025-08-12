@@ -38,7 +38,12 @@ export async function GET(req: NextRequest, context: { params: { id: string } })
         // Public GET: do not require authentication
         const doc = await db.collection('hotels').doc(params.id).get();
         if (!doc.exists) {
-            return NextResponse.json({ error: 'Hotel not found' }, { status: 404 });
+            return NextResponse.json({ error: 'Hotel not found' }, {
+                status: 404,
+                headers: {
+                    'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
+                }
+            });
         }
         const hotel = {
             id: doc.id,
@@ -46,7 +51,13 @@ export async function GET(req: NextRequest, context: { params: { id: string } })
             createdAt: doc.data()?.createdAt?.toDate(),
             updatedAt: doc.data()?.updatedAt?.toDate(),
         };
-        return NextResponse.json(hotel);
+
+        // Add cache headers for better performance
+        return NextResponse.json(hotel, {
+            headers: {
+                'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
+            }
+        });
     } catch (error) {
         return NextResponse.json({ error: 'Failed to fetch hotel' }, { status: 500 });
     }

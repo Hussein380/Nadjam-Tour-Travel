@@ -1,4 +1,4 @@
-import type React from "react"
+import React from "react"
 import type { Metadata } from "next"
 import "./globals.css"
 import { Navbar } from "@/components/Navbar"
@@ -6,6 +6,7 @@ import { Footer } from "@/components/Footer"
 import ErrorBoundary from "@/components/ErrorBoundary"
 import { Toaster } from "@/components/ui/sonner"
 import { ChatBot } from "@/components/ChatBot"
+import ReactQueryProvider from "@/components/ReactQueryProvider";
 
 export const metadata: Metadata = {
   title: "Nadjam Tour & Travel - Discover Amazing Destinations",
@@ -22,6 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen bg-gray-50">
+        <ReactQueryProvider>
         <ErrorBoundary>
           <Navbar />
           <main className="min-h-screen">{children}</main>
@@ -29,6 +31,7 @@ export default function RootLayout({
         </ErrorBoundary>
         <Toaster />
         <ChatBot />
+        </ReactQueryProvider>
       </body>
     </html>
   )

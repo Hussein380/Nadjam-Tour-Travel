@@ -30,6 +30,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@radix-ui/react-label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const formSchema = z.object({
     slug: z.string().min(2, 'Slug must be at least 2 characters.'),
@@ -223,6 +224,28 @@ export default function PackageForm({ initialData }: PackageFormProps) {
         setExistingImages(prev => prev.filter((_, i) => i !== idx));
     };
 
+    const categoryList = [
+        'Safaris & Wildlife',
+        'Islands & Beaches',
+        'City Tours',
+        'Cultural Experiences',
+        'Adventure',
+        'Family Holidays',
+        'Honeymoon & Romance',
+        'Religious (Hajj & Umrah)',
+        'Luxury',
+        'Budget',
+        'Eco & Nature',
+        'Sports & Events',
+        'Wellness & Spa',
+    ];
+    const groupSizeList = [
+        'Solo',
+        'Couple',
+        'Small Group',
+        'Large Group',
+    ];
+
     return (
         <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -303,7 +326,16 @@ export default function PackageForm({ initialData }: PackageFormProps) {
                             <FormItem>
                                 <FormLabel>Category</FormLabel>
                                 <FormControl>
-                                    <Input placeholder="e.g., Beach & Culture" {...field} />
+                                    <Select value={field.value} onValueChange={field.onChange}>
+                                        <SelectTrigger className="w-full">
+                                            <SelectValue placeholder="Select a category" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {categoryList.map(category => (
+                                                <SelectItem key={category} value={category}>{category}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -372,7 +404,16 @@ export default function PackageForm({ initialData }: PackageFormProps) {
                             <FormItem>
                                 <FormLabel>Group Size</FormLabel>
                                 <FormControl>
-                                    <Input placeholder="e.g., 10-20" {...field} />
+                                    <Select value={field.value} onValueChange={field.onChange}>
+                                        <SelectTrigger className="w-full">
+                                            <SelectValue placeholder="Select group size" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {groupSizeList.map(size => (
+                                                <SelectItem key={size} value={size}>{size}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
