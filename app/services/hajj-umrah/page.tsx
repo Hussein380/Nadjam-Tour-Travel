@@ -52,7 +52,7 @@ export default function Page() {
                   <CardTitle className="text-xl">Basic Hajj Package</CardTitle>
                   <p className="text-sm text-muted-foreground">For first-time pilgrims</p>
             </div>
-                <Badge variant="outline">Starting from $1,200</Badge>
+                <Badge variant="outline"></Badge>
               </CardHeader>
               <CardContent>
                 <p>This package includes:</p>
@@ -72,7 +72,7 @@ export default function Page() {
                   <CardTitle className="text-xl">Premium Hajj Package</CardTitle>
                   <p className="text-sm text-muted-foreground">For families and groups</p>
                 </div>
-                <Badge variant="outline">Starting from $2,500</Badge>
+                <Badge variant="outline"></Badge>
               </CardHeader>
               <CardContent>
                 <p>This package includes:</p>
@@ -98,7 +98,7 @@ export default function Page() {
                   <CardTitle className="text-xl">Standard Umrah Package</CardTitle>
                   <p className="text-sm text-muted-foreground">For individual pilgrims</p>
                 </div>
-                <Badge variant="outline">Starting from $800</Badge>
+                <Badge variant="outline"></Badge>
               </CardHeader>
               <CardContent>
                 <p>This package includes:</p>
@@ -118,7 +118,7 @@ export default function Page() {
                   <CardTitle className="text-xl">VIP Umrah Package</CardTitle>
                   <p className="text-sm text-muted-foreground">For families and groups</p>
                 </div>
-                <Badge variant="outline">Starting from $1,800</Badge>
+                <Badge variant="outline"></Badge>
               </CardHeader>
               <CardContent>
                 <p>This package includes:</p>
@@ -232,7 +232,7 @@ export default function Page() {
               For more information or to book your pilgrimage, please contact us:
             </p>
             <ul className="list-none text-sm text-muted-foreground">
-              <li><Phone className="inline-block mr-2" /> +1 (555) 123-4567</li>
+              <li><Phone className="inline-block mr-2" /> +254725996394</li>
               <li><Mail className="inline-block mr-2" /> info@nadjamtravel.com</li>
               <li><MessageCircle className="inline-block mr-2" /> @nadjamtravel</li>
             </ul>
