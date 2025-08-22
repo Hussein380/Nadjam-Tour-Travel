@@ -7,6 +7,8 @@ import ErrorBoundary from "@/components/ErrorBoundary"
 import { Toaster } from "@/components/ui/sonner"
 import { ChatBot } from "@/components/ChatBot"
 import ReactQueryProvider from "@/components/ReactQueryProvider";
+import Script from "next/script"
+import Analytics from "@/components/Analytics"
 
 export const metadata: Metadata = {
   title: "Nadjam Tour & Travel - Discover Amazing Destinations",
@@ -23,14 +25,24 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen bg-gray-50">
+        <Script src="https://www.googletagmanager.com/gtag/js?id=G-4VZS2PFML0" strategy="afterInteractive" />
+        <Script id="gtag-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);} 
+            gtag('js', new Date());
+            gtag('config', 'G-4VZS2PFML0');
+          `}
+        </Script>
         <ReactQueryProvider>
-        <ErrorBoundary>
-          <Navbar />
-          <main className="min-h-screen">{children}</main>
-          <Footer />
-        </ErrorBoundary>
-        <Toaster />
-        <ChatBot />
+          <ErrorBoundary>
+            <Navbar />
+            <main className="min-h-screen">{children}</main>
+            <Footer />
+          </ErrorBoundary>
+          <Toaster />
+          <ChatBot />
+          <Analytics />
         </ReactQueryProvider>
       </body>
     </html>
