@@ -76,20 +76,12 @@ export default function HomePage() {
     return () => clearInterval(interval)
   }, [])
 
-  // Preload images
+  // Preload only the first hero image to avoid delaying initial render
   useEffect(() => {
-    const imagePromises = heroImages.map((image) => {
-      return new Promise((resolve, reject) => {
-        const img = new window.Image()
-        img.onload = resolve
-        img.onerror = reject
-        img.src = image.src
-      })
-    })
-
-    Promise.all(imagePromises)
-      .then(() => setImagesLoaded(true))
-      .catch(() => setImagesLoaded(true)) // Still show content even if images fail
+    const img = new window.Image()
+    img.onload = () => setImagesLoaded(true)
+    img.onerror = () => setImagesLoaded(true)
+    img.src = heroImages[0].src
   }, [])
 
   const nextImage = () => {
@@ -325,7 +317,7 @@ export default function HomePage() {
                       </Swiper>
                     ) : (
                       <img
-                        src={pkg.image || "/placeholder.svg"}
+                        src={(pkg.images && pkg.images.length > 0 ? pkg.images[0] : "/placeholder.svg")}
                         alt={pkg.title}
                         className="object-cover group-hover:scale-105 transition-transform duration-500 w-full h-full"
                         loading="lazy"
