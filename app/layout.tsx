@@ -1,4 +1,4 @@
-import React from "react"
+import React, { Suspense } from "react"
 import type { Metadata } from "next"
 import "./globals.css"
 import { Navbar } from "@/components/Navbar"
@@ -42,7 +42,9 @@ export default function RootLayout({
           </ErrorBoundary>
           <Toaster />
           <ChatBot />
-          <Analytics />
+          <Suspense fallback={null}>
+            <Analytics />
+          </Suspense>
         </ReactQueryProvider>
       </body>
     </html>
