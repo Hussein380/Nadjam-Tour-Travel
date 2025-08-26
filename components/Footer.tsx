@@ -85,6 +85,14 @@ export function Footer() {
               </li>
               <li>
                 <Link
+                  href="/blog"
+                  className="text-gray-300 hover:text-white transition-colors text-base sm:text-lg"
+                >
+                  Blog
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/services/hajj-umrah"
                   className="text-gray-300 hover:text-white transition-colors text-base sm:text-lg"
                 >

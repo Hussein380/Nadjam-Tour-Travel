@@ -25,6 +25,7 @@ export function Navbar() {
     { href: "/hotels", label: "Hotels" },
     { href: "/flights", label: "Flight Booking" },
     { href: "/packages", label: "Packages" },
+    { href: "/blog", label: "Blog" },
   ]
 
   const services = [
