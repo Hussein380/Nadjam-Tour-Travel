@@ -55,9 +55,9 @@ const heroImages = [
 ]
 
 const stats = [
-  { number: "500+", label: "Happy Travelers" },
+  { number: "100+", label: "Happy Travelers" },
   { number: "50+", label: "Destinations" },
-  { number: "15+", label: "Years Experience" },
+  { number: "2", label: "Years Experience" },
   { number: "98%", label: "Satisfaction Rate" },
 ]
 
