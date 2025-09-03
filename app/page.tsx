@@ -228,7 +228,7 @@ export default function HomePage() {
               Why Choose Nadjam Travel
             </h2>
             <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto font-light leading-relaxed px-4">
-              With over 15 years of expertise in creating extraordinary travel experiences, we're your trusted partner
+              Experience in creating extraordinary travel experiences, we're your trusted partner
               for adventures that exceed expectations.
             </p>
           </div>
@@ -249,9 +249,9 @@ export default function HomePage() {
               <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
                 <Globe className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
-              <h3 className="text-xl sm:text-2xl font-light mb-3 sm:mb-4 text-gray-900">Global Network</h3>
+              <h3 className="text-xl sm:text-2xl font-light mb-3 sm:mb-4 text-gray-900">wide Kenyan Network</h3>
               <p className="text-gray-600 leading-relaxed text-sm sm:text-base">
-                Access to exclusive destinations and premium accommodations worldwide, from luxury safari lodges to
+                Access to exclusive destinations and premium accommodations in Kenya, from luxury safari lodges to
                 eco-friendly retreats.
               </p>
             </div>
@@ -278,7 +278,7 @@ export default function HomePage() {
               Featured Adventures
             </h2>
             <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto font-light px-4">
-              Handpicked experiences that showcase the world's most incredible destinations
+              Handpicked experiences that showcase Kenya's most incredible destinations
             </p>
           </div>
 
