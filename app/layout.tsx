@@ -25,6 +25,20 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen bg-gray-50">
+        <Script
+          id="emrldtp-script"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function () {
+                var script = document.createElement("script");
+                script.async = 1;
+                script.src = 'https://emrldtp.cc/NDcyMDI3.js?t=472027';
+                document.head.appendChild(script);
+              })();
+            `,
+          }}
+        />
         <Script src="https://www.googletagmanager.com/gtag/js?id=G-4VZS2PFML0" strategy="afterInteractive" />
         <Script id="gtag-init" strategy="afterInteractive">
           {`
