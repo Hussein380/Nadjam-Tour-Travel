@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 
 // Shared secret with Sanity webhook
 const WEBHOOK_SECRET = process.env.SANITY_REVALIDATE_SECRET
@@ -13,10 +14,14 @@ export async function POST(req: NextRequest) {
         const body = await req.json().catch(() => ({} as any))
         const slug = body?.slug || req.nextUrl.searchParams.get("slug")
 
-        // Revalidate the blog index
-        // In Next.js App Router, tagging would be ideal; here we return a hint response
+        // Revalidate the blog index and specific post page (if provided)
         const paths: string[] = ["/blog"]
-        if (slug) paths.push(`/blog/${slug}`)
+        revalidatePath("/blog")
+        if (slug) {
+            const postPath = `/blog/${slug}`
+            revalidatePath(postPath)
+            paths.push(postPath)
+        }
 
         return NextResponse.json({ revalidated: true, paths })
     } catch (e) {

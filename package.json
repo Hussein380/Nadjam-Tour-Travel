@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "postbuild": "next-sitemap"
+    "postbuild": "next-sitemap",
+    "diag:firebase": "node scripts/diag-firebase-admin.js",
+    "diag:sanity": "node scripts/diag-sanity-posts.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -53,6 +55,7 @@
     "cmdk": "1.0.4",
     "date-fns": "3.6.0",
     "embla-carousel-react": "8.5.1",
+    "dotenv": "^16.4.5",
     "formidable": "^3.5.4",
     "framer-motion": "^12.23.3",
     "groq": "^3.99.0",
