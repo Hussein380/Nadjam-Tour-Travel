@@ -14,7 +14,42 @@ export const metadata: Metadata = {
   title: "Nadjam Tour & Travel - Discover Amazing Destinations",
   description:
     "Book your dream vacation with Nadjam Tour & Travel. Explore our curated travel packages and create unforgettable memories.",
-  generator: 'v0.dev'
+  generator: 'v0.dev',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/icon.png', type: 'image/png', sizes: '96x96' },
+      { url: '/icon-192.png', type: 'image/png', sizes: '192x192' },
+      { url: '/icon-512.png', type: 'image/png', sizes: '512x512' },
+    ],
+    apple: [
+      { url: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
+  manifest: '/site.webmanifest',
+  openGraph: {
+    title: "Nadjam Tour & Travel - Discover Amazing Destinations",
+    description: "Book your dream vacation with Nadjam Tour & Travel. Explore our curated travel packages and create unforgettable memories.",
+    url: 'https://nadjamtravel.com',
+    siteName: 'Nadjam Tour & Travel',
+    images: [
+      {
+        url: '/images/nadjam-logo.png',
+        width: 1200,
+        height: 630,
+        alt: 'Nadjam Tour & Travel',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Nadjam Tour & Travel',
+    description: 'Book your dream vacation with Nadjam Tour & Travel',
+    images: ['/images/nadjam-logo.png'],
+  },
 }
 
 export default function RootLayout({
