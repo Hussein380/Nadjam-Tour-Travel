@@ -29,6 +29,8 @@ const BOT_NAME = "NadjamTravel AI"
 const BOT_AVATAR = <Bot className="w-4 h-4" />
 const THEME_COLOR = "from-blue-900 to-blue-700"
 const DEFAULT_LANGUAGE = "en"
+const WHATSAPP_NUMBER = "254725996394"
+const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER}`
 
 const initialBotMessage = (lang: string): Message => ({
   id: "1",
@@ -136,6 +138,33 @@ export function ChatBot() {
 
   return (
     <>
+      {/* WhatsApp Quick Contact */}
+      {!isOpen && (
+        <Button
+          asChild
+          size="icon"
+          className="fixed bottom-24 right-6 z-50 w-14 h-14 rounded-full bg-[#25D366] hover:bg-[#1ebe5d] shadow-lg hover:shadow-xl transition-all duration-300"
+        >
+          <a
+            href={WHATSAPP_LINK}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Chat with Nadjam Travel on WhatsApp"
+          >
+            <svg
+              viewBox="0 0 32 32"
+              className="w-7 h-7 text-white"
+              aria-hidden="true"
+            >
+              <path
+                fill="currentColor"
+                d="M16.04 2.01c-7.24 0-13.2 5.77-13.2 12.87 0 2.63.87 5.07 2.33 7.06L2 30l8.3-2.73a13.8 13.8 0 0 0 5.74 1.22c7.25 0 13.21-5.78 13.21-12.88 0-7.1-5.94-12.87-13.21-12.87Zm7.72 17.33c-.33.93-1.63 1.8-2.24 1.85-.57.05-1.28.08-2.07-.13-.48-.13-1.1-.36-1.9-.7-3.36-1.45-5.54-4.82-5.71-5.05-.16-.23-1.36-1.8-1.36-3.43 0-1.62.86-2.41 1.16-2.74.33-.34.71-.43.95-.43.24 0 .48 0 .69.01.22.01.52-.08.81.62.33.8 1.12 2.75 1.22 2.95.1.2.16.44.03.67-.13.23-.2.38-.4.58-.2.2-.42.45-.6.6-.2.17-.41.35-.18.68.23.34 1.02 1.7 2.19 2.75 1.51 1.35 2.78 1.77 3.17 1.97.39.2.62.17.85-.1.23-.27.98-1.15 1.24-1.54.26-.39.52-.33.86-.2.34.12 2.16 1.02 2.53 1.2.37.18.62.27.71.42.1.15.1.88-.23 1.81Z"
+              />
+            </svg>
+          </a>
+        </Button>
+      )}
+
       {/* Chat Button */}
       {!isOpen && (
         <Button
@@ -166,6 +195,30 @@ export function ChatBot() {
                 </div>
               </div>
               <div className="flex items-center space-x-2">
+                <Button
+                  asChild
+                  variant="ghost"
+                  size="icon"
+                  className="w-8 h-8 text-white hover:bg-white/20"
+                >
+                  <a
+                    href={WHATSAPP_LINK}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Open WhatsApp chat"
+                  >
+                    <svg
+                      viewBox="0 0 32 32"
+                      className="w-5 h-5 text-white"
+                      aria-hidden="true"
+                    >
+                      <path
+                        fill="currentColor"
+                        d="M16.04 2.01c-7.24 0-13.2 5.77-13.2 12.87 0 2.63.87 5.07 2.33 7.06L2 30l8.3-2.73a13.8 13.8 0 0 0 5.74 1.22c7.25 0 13.21-5.78 13.21-12.88 0-7.1-5.94-12.87-13.21-12.87Zm7.72 17.33c-.33.93-1.63 1.8-2.24 1.85-.57.05-1.28.08-2.07-.13-.48-.13-1.1-.36-1.9-.7-3.36-1.45-5.54-4.82-5.71-5.05-.16-.23-1.36-1.8-1.36-3.43 0-1.62.86-2.41 1.16-2.74.33-.34.71-.43.95-.43.24 0 .48 0 .69.01.22.01.52-.08.81.62.33.8 1.12 2.75 1.22 2.95.1.2.16.44.03.67-.13.23-.2.38-.4.58-.2.2-.42.45-.6.6-.2.17-.41.35-.18.68.23.34 1.02 1.7 2.19 2.75 1.51 1.35 2.78 1.77 3.17 1.97.39.2.62.17.85-.1.23-.27.98-1.15 1.24-1.54.26-.39.52-.33.86-.2.34.12 2.16 1.02 2.53 1.2.37.18.62.27.71.42.1.15.1.88-.23 1.81Z"
+                      />
+                    </svg>
+                  </a>
+                </Button>
                 <Button
                   variant="ghost"
                   size="icon"
