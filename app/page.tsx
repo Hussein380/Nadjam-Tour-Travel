@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { MapPin, Star, Award, Globe, Heart, ArrowRight, Phone, ChevronLeft, ChevronRight, Sparkles, MessageSquare, ShieldCheck, Clock } from "lucide-react"
+import { MapPin, Star, Award, Globe, Heart, ArrowRight, Phone, ChevronLeft, ChevronRight, Sparkles, MessageSquare, ShieldCheck, Clock, CheckCircle2 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -63,26 +63,32 @@ const stats = [
 
 const aiHighlights = [
   {
-    title: "Hotel & Resort Picks",
-    description: "Tell Nadjam AI your budget and vibe—it suggests handpicked stays immediately.",
-    icon: <Sparkles className="w-5 h-5 text-blue-600" />,
+    title: "Hotel shortlists that match your taste",
+    description: "Share your budget or vibe and receive 2‑3 vetted stays with real pricing.",
   },
   {
-    title: "Custom Itineraries",
-    description: "Get day-by-day plans for safaris, beach escapes, or spiritual journeys in seconds.",
-    icon: <MessageSquare className="w-5 h-5 text-purple-600" />,
+    title: "Made-for-you safari plans",
+    description: "Nadjam AI pieces together transport, guides, and daily highlights in minutes.",
   },
   {
-    title: "Instant Quotes & Support",
-    description: "Ask about costs, availability, or special requests any time—AI is live 24/7.",
-    icon: <Clock className="w-5 h-5 text-amber-600" />,
-  },
-  {
-    title: "Trusted Travel Advice",
-    description: "All answers use Nadjam’s verified data, so recommendations stay accurate and safe.",
-    icon: <ShieldCheck className="w-5 h-5 text-emerald-600" />,
+    title: "Instant answers in English & Swahili",
+    description: "Clarify visas, Hajj prep, or family travel details any hour of the day.",
   },
 ]
+
+const aiShowcase = {
+  scenario: "“We’re two friends looking for a 4-night safari plus a beach reset under $1,200 each.”",
+  response: [
+    "Maasai Mara – Lite fly-in package at Keekorok Lodge with dawn game drives.",
+    "Diani wrap-up – Two nights at Waterlovers Beach Retreat with airport transfers.",
+    "WhatsApp-ready quote and flexible payment link sent instantly.",
+  ],
+  promise: [
+    "Answers come from Nadjam’s verified inventory.",
+    "Switch between English and Swahili mid-chat.",
+    "Hand off to a human advisor whenever you’re ready to book.",
+  ],
+}
 
 export default function HomePage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
@@ -250,38 +256,35 @@ export default function HomePage() {
       </section>
 
       {/* Nadjam AI Section CTA */}
-      <section className="py-16 sm:py-20 bg-gradient-to-b from-blue-50 via-white to-white w-full">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 grid lg:grid-cols-2 gap-12 items-center">
-          <div className="space-y-6">
-            <Badge className="bg-blue-100 text-blue-900 text-xs uppercase tracking-wide w-fit px-3 py-1 rounded-full">
-              New • Nadjam AI
+      <section className="py-16 sm:py-20 bg-[#fdf8f3] w-full">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 grid lg:grid-cols-[1.1fr,0.9fr] gap-12 items-stretch">
+          <div className="space-y-7">
+            <Badge className="bg-amber-100 text-amber-800 text-xs uppercase tracking-[0.2em] w-fit px-4 py-1 rounded-full">
+              Nadjam AI Concierge
             </Badge>
-            <h2 className="text-3xl sm:text-4xl font-light text-gray-900">
-              Talk to Nadjam AI — your 24/7 travel specialist
+            <h2 className="text-3xl sm:text-4xl font-light text-gray-900 leading-snug">
+              Real travel pros, now assisted by Nadjam AI.
             </h2>
-            <p className="text-gray-600 text-base sm:text-lg leading-relaxed">
-              Ask anything about hotels, safaris, Hajj & Umrah, or custom trips. Nadjam AI searches our latest packages,
-              compares options, and gives you answers in seconds. Switch between English and Swahili anytime.
+            <p className="text-gray-700 text-base sm:text-lg leading-relaxed">
+              Ask about hotels, multi-city itineraries, Hajj & Umrah, or last-minute getaways. Nadjam AI searches our
+              verified inventory, shapes a plan, and loops in a human advisor the moment you need them.
             </p>
-            <ul className="space-y-3">
-              <li className="flex items-start space-x-3">
-                <Sparkles className="w-5 h-5 text-blue-600 mt-0.5" />
-                <span className="text-gray-700">Discover curated hotels and experiences that match your style.</span>
-              </li>
-              <li className="flex items-start space-x-3">
-                <MessageSquare className="w-5 h-5 text-purple-600 mt-0.5" />
-                <span className="text-gray-700">Plan full itineraries with transfers, guides, and must-do activities.</span>
-              </li>
-              <li className="flex items-start space-x-3">
-                <ShieldCheck className="w-5 h-5 text-emerald-600 mt-0.5" />
-                <span className="text-gray-700">Get accurate info pulled directly from Nadjam’s verified data.</span>
-              </li>
-            </ul>
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="space-y-4">
+              {aiHighlights.map((item) => (
+                <div key={item.title} className="flex items-start space-x-3">
+                  <CheckCircle2 className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">{item.title}</p>
+                    <p className="text-sm text-gray-600 leading-relaxed">{item.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
               <Button
                 size="lg"
                 onClick={openAIChat}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-none"
+                className="w-full sm:w-auto bg-gray-900 text-white hover:bg-gray-800 px-7 py-3 rounded-none"
               >
                 Talk to Nadjam AI
               </Button>
@@ -289,33 +292,65 @@ export default function HomePage() {
                 asChild
                 size="lg"
                 variant="outline"
-                className="border-2 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white px-6 py-3 rounded-none"
+                className="w-full sm:w-auto border-2 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white px-7 py-3 rounded-none"
               >
                 <a
                   href="https://wa.me/254725996394"
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2"
                 >
+                  <svg
+                    viewBox="0 0 32 32"
+                    className="w-4 h-4"
+                    aria-hidden="true"
+                    fill="currentColor"
+                  >
+                    <path d="M16.04 2.01c-7.24 0-13.2 5.77-13.2 12.87 0 2.63.87 5.07 2.33 7.06L2 30l8.3-2.73a13.8 13.8 0 0 0 5.74 1.22c7.25 0 13.21-5.78 13.21-12.88 0-7.1-5.94-12.87-13.21-12.87Zm7.72 17.33c-.33.93-1.63 1.8-2.24 1.85-.57.05-1.28.08-2.07-.13-.48-.13-1.1-.36-1.9-.7-3.36-1.45-5.54-4.82-5.71-5.05-.16-.23-1.36-1.8-1.36-3.43 0-1.62.86-2.41 1.16-2.74.33-.34.71-.43.95-.43.24 0 .48 0 .69.01.22.01.52-.08.81.62.33.8 1.12 2.75 1.22 2.95.1.2.16.44.03.67-.13.23-.2.38-.4.58-.2.2-.42.45-.6.6-.2.17-.41.35-.18.68.23.34 1.02 1.7 2.19 2.75 1.51 1.35 2.78 1.77 3.17 1.97.39.2.62.17.85-.1.23-.27.98-1.15 1.24-1.54.26-.39.52-.33.86-.2.34.12 2.16 1.02 2.53 1.2.37.18.62.27.71.42.1.15.1.88-.23 1.81Z" />
+                  </svg>
                   Chat on WhatsApp
                 </a>
               </Button>
             </div>
-            <p className="text-xs uppercase tracking-[0.2em] text-gray-500">
+            <p className="text-xs tracking-[0.3em] text-gray-500 uppercase">
               Responds instantly • Available 24/7 • English & Swahili
             </p>
           </div>
-          <div className="grid sm:grid-cols-2 gap-4">
-            {aiHighlights.map((item) => (
-              <Card key={item.title} className="h-full border border-gray-100 shadow-lg bg-white/80 backdrop-blur">
-                <CardContent className="p-6 space-y-3">
-                  <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                    {item.icon}
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900">{item.title}</h3>
-                  <p className="text-sm text-gray-600 leading-relaxed">{item.description}</p>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="space-y-5">
+            <Card className="h-full border-0 shadow-xl bg-white">
+              <CardContent className="p-6 space-y-5">
+                <p className="text-xs uppercase tracking-[0.3em] text-amber-600">Sample chat</p>
+                <p className="text-lg text-gray-900 leading-relaxed">{aiShowcase.scenario}</p>
+                <div className="rounded-2xl bg-amber-50/90 border border-amber-100 p-5 space-y-2">
+                  <p className="text-sm font-semibold text-amber-900 uppercase tracking-wide">Nadjam AI suggests</p>
+                  <ul className="space-y-1 text-sm text-amber-900 leading-relaxed">
+                    {aiShowcase.response.map((line) => (
+                      <li key={line}>• {line}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="space-y-3">
+                  {aiShowcase.promise.map((line) => (
+                    <div
+                      key={line}
+                      className="flex items-start space-x-3 text-sm text-gray-700 leading-relaxed"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-gray-400 mt-2"></span>
+                      <span>{line}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border border-gray-200 bg-white/80">
+              <CardContent className="p-5">
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  “I asked Nadjam AI to plan a honeymoon with beach + safari. Within ten minutes I had hotel options,
+                  a budget, and a WhatsApp link to confirm. It felt like chatting with a real planner.”
+                </p>
+                <p className="text-xs text-gray-500 uppercase tracking-[0.2em] mt-4">— Aisha & Malik, Nairobi</p>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
