@@ -113,6 +113,7 @@ export function ChatBot() {
   const [inputValue, setInputValue] = useState("")
   const [isTyping, setIsTyping] = useState(false)
   const [language, setLanguage] = useState(DEFAULT_LANGUAGE)
+  const [showAssistantPrompt, setShowAssistantPrompt] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -146,6 +147,32 @@ export function ChatBot() {
   }
   useEffect(() => { scrollToBottom() }, [messages])
   useEffect(() => { if (isOpen && !isMinimized) inputRef.current?.focus() }, [isOpen, isMinimized])
+  useEffect(() => {
+    const handler = () => {
+      setIsOpen(true)
+      setIsMinimized(false)
+      setShowAssistantPrompt(false)
+    }
+    window.addEventListener("open-nadjam-chat", handler)
+    ;(window as any).openNadjamChat = handler
+    return () => {
+      window.removeEventListener("open-nadjam-chat", handler)
+      if ((window as any).openNadjamChat === handler) {
+        delete (window as any).openNadjamChat
+      }
+    }
+  }, [])
+  useEffect(() => {
+    if (isOpen) {
+      setShowAssistantPrompt(false)
+    }
+  }, [isOpen])
+
+  const openChat = () => {
+    setIsOpen(true)
+    setIsMinimized(false)
+    setShowAssistantPrompt(false)
+  }
 
   const handleSendMessage = async (message: string) => {
     if (!message.trim()) return
@@ -229,10 +256,30 @@ export function ChatBot() {
         </Button>
       )}
 
+      {/* Floating AI prompt */}
+      {!isOpen && showAssistantPrompt && (
+        <div className="fixed bottom-36 right-6 z-40 max-w-xs w-64 bg-white shadow-xl rounded-2xl border border-blue-100 p-4 transition-all duration-300">
+          <div className="flex items-center space-x-2 text-sm font-semibold text-blue-700">
+            <Sparkles className="w-4 h-4" />
+            <span>Need trip ideas?</span>
+          </div>
+          <p className="text-xs text-gray-600 mt-2 leading-relaxed">
+            Nadjam AI can find hotels, plan safaris, and get you instant quotes.
+          </p>
+          <Button
+            onClick={openChat}
+            size="sm"
+            className="w-full mt-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+          >
+            Chat with Nadjam AI
+          </Button>
+        </div>
+      )}
+
       {/* Chat Button */}
       {!isOpen && (
         <Button
-          onClick={() => setIsOpen(true)}
+          onClick={openChat}
           className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300 group"
           size="icon"
         >

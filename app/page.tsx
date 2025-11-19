@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { MapPin, Star, Award, Globe, Heart, ArrowRight, Phone, ChevronLeft, ChevronRight } from "lucide-react"
+import { MapPin, Star, Award, Globe, Heart, ArrowRight, Phone, ChevronLeft, ChevronRight, Sparkles, MessageSquare, ShieldCheck, Clock } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -61,6 +61,29 @@ const stats = [
   { number: "98%", label: "Satisfaction Rate" },
 ]
 
+const aiHighlights = [
+  {
+    title: "Hotel & Resort Picks",
+    description: "Tell Nadjam AI your budget and vibe—it suggests handpicked stays immediately.",
+    icon: <Sparkles className="w-5 h-5 text-blue-600" />,
+  },
+  {
+    title: "Custom Itineraries",
+    description: "Get day-by-day plans for safaris, beach escapes, or spiritual journeys in seconds.",
+    icon: <MessageSquare className="w-5 h-5 text-purple-600" />,
+  },
+  {
+    title: "Instant Quotes & Support",
+    description: "Ask about costs, availability, or special requests any time—AI is live 24/7.",
+    icon: <Clock className="w-5 h-5 text-amber-600" />,
+  },
+  {
+    title: "Trusted Travel Advice",
+    description: "All answers use Nadjam’s verified data, so recommendations stay accurate and safe.",
+    icon: <ShieldCheck className="w-5 h-5 text-emerald-600" />,
+  },
+]
+
 export default function HomePage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [imagesLoaded, setImagesLoaded] = useState(false)
@@ -91,6 +114,12 @@ export default function HomePage() {
   const prevImage = () => {
     setCurrentImageIndex((prev) => (prev - 1 + heroImages.length) % heroImages.length)
   }
+
+  const openAIChat = useCallback(() => {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("open-nadjam-chat"))
+    }
+  }, [])
 
   return (
     <div className="flex flex-col w-full overflow-x-hidden">
@@ -215,6 +244,77 @@ export default function HomePage() {
                   {stat.label}
                 </div>
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Nadjam AI Section CTA */}
+      <section className="py-16 sm:py-20 bg-gradient-to-b from-blue-50 via-white to-white w-full">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 grid lg:grid-cols-2 gap-12 items-center">
+          <div className="space-y-6">
+            <Badge className="bg-blue-100 text-blue-900 text-xs uppercase tracking-wide w-fit px-3 py-1 rounded-full">
+              New • Nadjam AI
+            </Badge>
+            <h2 className="text-3xl sm:text-4xl font-light text-gray-900">
+              Talk to Nadjam AI — your 24/7 travel specialist
+            </h2>
+            <p className="text-gray-600 text-base sm:text-lg leading-relaxed">
+              Ask anything about hotels, safaris, Hajj & Umrah, or custom trips. Nadjam AI searches our latest packages,
+              compares options, and gives you answers in seconds. Switch between English and Swahili anytime.
+            </p>
+            <ul className="space-y-3">
+              <li className="flex items-start space-x-3">
+                <Sparkles className="w-5 h-5 text-blue-600 mt-0.5" />
+                <span className="text-gray-700">Discover curated hotels and experiences that match your style.</span>
+              </li>
+              <li className="flex items-start space-x-3">
+                <MessageSquare className="w-5 h-5 text-purple-600 mt-0.5" />
+                <span className="text-gray-700">Plan full itineraries with transfers, guides, and must-do activities.</span>
+              </li>
+              <li className="flex items-start space-x-3">
+                <ShieldCheck className="w-5 h-5 text-emerald-600 mt-0.5" />
+                <span className="text-gray-700">Get accurate info pulled directly from Nadjam’s verified data.</span>
+              </li>
+            </ul>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                size="lg"
+                onClick={openAIChat}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-none"
+              >
+                Talk to Nadjam AI
+              </Button>
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="border-2 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white px-6 py-3 rounded-none"
+              >
+                <a
+                  href="https://wa.me/254725996394"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Chat on WhatsApp
+                </a>
+              </Button>
+            </div>
+            <p className="text-xs uppercase tracking-[0.2em] text-gray-500">
+              Responds instantly • Available 24/7 • English & Swahili
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            {aiHighlights.map((item) => (
+              <Card key={item.title} className="h-full border border-gray-100 shadow-lg bg-white/80 backdrop-blur">
+                <CardContent className="p-6 space-y-3">
+                  <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                    {item.icon}
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900">{item.title}</h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">{item.description}</p>
+                </CardContent>
+              </Card>
             ))}
           </div>
         </div>
