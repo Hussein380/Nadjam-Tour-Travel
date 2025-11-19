@@ -37,6 +37,9 @@ scripts/setAdmins.js
 # Ignore Docs with secrets (if you ever add them)
 Docs/*.md
 
+# Internal Markdown docs consolidated under one folder
+/internal-docs/
+
 # Personal files/folders
 Downloads/
 Desktop/
