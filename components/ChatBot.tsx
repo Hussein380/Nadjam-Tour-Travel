@@ -32,6 +32,70 @@ const DEFAULT_LANGUAGE = "en"
 const WHATSAPP_NUMBER = "254725996394"
 const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER}`
 
+const sanitizeLine = (line: string) => line.replace(/\*\*/g, "").replace(/\s+/g, " ").trim()
+
+const renderBotMessageContent = (rawContent: string) => {
+  const cleaned = rawContent.replace(/\*\*/g, "").replace(/\r/g, "").trim()
+  const lines = cleaned.split("\n").map((line) => sanitizeLine(line)).filter(Boolean)
+  const elements: React.ReactNode[] = []
+  let listItems: string[] = []
+  let keyIndex = 0
+
+  const pushList = () => {
+    if (listItems.length === 0) return
+    elements.push(
+      <ul
+        key={`list-${keyIndex++}`}
+        className="list-disc list-outside pl-4 space-y-1 text-sm text-gray-800"
+      >
+        {listItems.map((item, idx) => (
+          <li key={`li-${keyIndex}-${idx}`} className="leading-relaxed">
+            {item}
+          </li>
+        ))}
+      </ul>,
+    )
+    listItems = []
+  }
+
+  for (const line of lines) {
+    const bulletMatch = line.match(/^[-•▪·]+\s*(.+)$/)
+    if (bulletMatch) {
+      listItems.push(bulletMatch[1])
+      continue
+    }
+
+    pushList()
+
+    const isHeading = /:$/g.test(line) && line.length <= 40
+    const isContactLine = /(contact|email|phone|\+?\d{3})/i.test(line)
+
+    if (isHeading) {
+      elements.push(
+        <p
+          key={`heading-${keyIndex++}`}
+          className="text-[11px] uppercase tracking-wide text-blue-600 font-semibold"
+        >
+          {line.replace(/:$/, "")}
+        </p>,
+      )
+    } else {
+      elements.push(
+        <p
+          key={`text-${keyIndex++}`}
+          className={`text-sm leading-relaxed whitespace-pre-line ${isContactLine ? "bg-blue-50 text-blue-900 font-medium rounded-md px-2 py-1" : "text-gray-900"}`}
+        >
+          {line}
+        </p>,
+      )
+    }
+  }
+
+  pushList()
+
+  return <div className="space-y-2">{elements}</div>
+}
+
 const initialBotMessage = (lang: string): Message => ({
   id: "1",
   type: "bot",
@@ -261,7 +325,11 @@ export function ChatBot() {
                         className={`rounded-lg p-3 ${message.type === "user" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-900"
                           }`}
                       >
-                        <p className="text-sm leading-relaxed">{message.content}</p>
+                        {message.type === "bot" ? (
+                          renderBotMessageContent(message.content)
+                        ) : (
+                          <p className="text-sm leading-relaxed whitespace-pre-line">{message.content}</p>
+                        )}
                         <p className="text-xs opacity-70 mt-1">
                           {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                         </p>
