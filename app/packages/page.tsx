@@ -197,15 +197,26 @@ export default function PackagesPage() {
               unforgettable memories
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center max-w-lg mx-auto px-4">
-              <Button size="lg" className="bg-white text-gray-900 hover:bg-gray-100 px-8 py-3 text-lg font-medium">
-                Explore Packages
+              <Button
+                asChild
+                size="lg"
+                className="bg-white text-gray-900 hover:bg-gray-100 px-8 py-3 text-lg font-medium"
+              >
+                <Link href="#packages-grid">Browse Handpicked Packages</Link>
               </Button>
               <Button
+                asChild
                 size="lg"
                 variant="outline"
                 className="border-2 border-white text-white hover:bg-white hover:text-gray-900 px-8 py-3 text-lg font-medium bg-transparent"
               >
-                Custom Package
+                <a
+                  href="https://tp.media/r?marker=682890&trs=472027&p=3965&u=https%3A%2F%2Fgetyourguide.com&campaign_id=108"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Browse Activities
+                </a>
               </Button>
             </div>
           </div>
@@ -213,6 +224,32 @@ export default function PackagesPage() {
       </section>
 
       {/* Search and Filters Section */}
+      {/* GetYourGuide CTA Banner */}
+      <section className="bg-gradient-to-r from-blue-900 via-blue-800 to-teal-700 text-white py-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 rounded-3xl bg-white/10 backdrop-blur px-6 py-8 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between shadow-[0_40px_90px_-45px_rgba(15,23,42,0.7)]">
+          <div className="text-center sm:text-left space-y-2">
+            <p className="text-xs uppercase tracking-[0.3em] text-white/70">Tours &amp; Activities</p>
+            <h3 className="text-2xl font-light text-white">Need add-ons beyond our curated packages?</h3>
+            <p className="text-sm text-white/80">
+              Book attraction passes and local experiences via our GetYourGuide partner hub.
+            </p>
+          </div>
+          <div className="text-center sm:text-right">
+            <a
+              href="https://tp.media/r?marker=682890&trs=472027&p=3965&u=https%3A%2F%2Fgetyourguide.com&campaign_id=108"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center px-6 py-3 text-base font-semibold rounded-full bg-gradient-to-r from-orange-400 via-amber-500 to-rose-500 text-white hover:brightness-110 transition-all shadow-[0_25px_60px_-25px_rgba(251,146,60,0.7)]"
+            >
+              Browse Tours &amp; Activities
+            </a>
+            <p className="text-[0.7rem] uppercase tracking-[0.3em] text-white/70 mt-2">
+              Powered by GetYourGuide
+            </p>
+          </div>
+        </div>
+      </section>
+
       <section className="relative -mt-16 z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
@@ -350,7 +387,7 @@ export default function PackagesPage() {
             </div>
 
             {/* Packages Grid */}
-            <div className="lg:w-3/4">
+            <div className="lg:w-3/4" id="packages-grid">
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2 className="text-2xl font-light text-gray-900">Travel Packages</h2>
