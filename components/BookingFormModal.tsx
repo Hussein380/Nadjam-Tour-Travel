@@ -356,6 +356,18 @@ export const BookingFormModal: React.FC<BookingFormModalProps> = ({ open, onClos
                         </select>
                         {showHelper.payment && <div className="text-xs text-gray-500 mt-1 animate-fade-in">{fieldHelpers.payment}</div>}
                     </div>
+                    <p className="text-xs text-gray-500 text-center sm:text-left">
+                        By submitting, you agree to our{" "}
+                        <a
+                            href="https://listwr.com/live-privacy-policy&token=d2e96632b36184bdf38355c7c1678a40e3205a0e"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 underline"
+                        >
+                            Privacy Policy
+                        </a>
+                        .
+                    </p>
                     {/* Actions */}
                     <div className="flex flex-col sm:flex-row justify-end gap-2 mt-4">
                         <button

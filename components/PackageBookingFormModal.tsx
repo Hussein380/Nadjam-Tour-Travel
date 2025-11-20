@@ -247,6 +247,18 @@ export const PackageBookingFormModal: React.FC<PackageBookingFormModalProps> = (
                     </div>
                     {/* Hidden Package Name */}
                     <input type="hidden" name="packageName" value={packageName} />
+                    <p className="text-xs text-gray-500 text-center sm:text-left">
+                        By submitting, you agree to our{" "}
+                        <a
+                            href="https://listwr.com/live-privacy-policy&token=d2e96632b36184bdf38355c7c1678a40e3205a0e"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 underline"
+                        >
+                            Privacy Policy
+                        </a>
+                        .
+                    </p>
                     <div className="flex flex-col sm:flex-row justify-end gap-2 mt-4">
                         <button
                             type="button"

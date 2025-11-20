@@ -198,7 +198,12 @@ export function Footer() {
               © {new Date().getFullYear()} Nadjam Travel. All rights reserved.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
-              <Link href="#" className="text-gray-400 hover:text-white transition-colors text-sm sm:text-base">
+              <Link
+                href="https://listwr.com/live-privacy-policy&token=d2e96632b36184bdf38355c7c1678a40e3205a0e"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-white transition-colors text-sm sm:text-base"
+              >
                 Privacy Policy
               </Link>
               <Link href="#" className="text-gray-400 hover:text-white transition-colors text-sm sm:text-base">
