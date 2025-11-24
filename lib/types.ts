@@ -1,5 +1,7 @@
 export interface Hotel {
     id: string;
+    slug?: string;
+    legacySlugs?: string[];
     name: string;
     location: string;
     rating: number;

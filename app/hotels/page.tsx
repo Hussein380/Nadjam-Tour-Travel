@@ -439,8 +439,9 @@ export default function HotelsPage() {
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {hotels.map((hotel, idx) => {
+                      const hotelSlug = hotel.slug || hotel.id
                       const card = (
-                        <Link key={hotel.id} href={`/hotels/${hotel.id}`} className="block group focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <Link key={hotel.id} href={`/hotels/${hotelSlug}`} className="block group focus:outline-none focus:ring-2 focus:ring-blue-500">
                           <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 border-0 shadow-lg cursor-pointer">
                             <div className="relative h-64 overflow-hidden">
                               {hotel.images && hotel.images.length > 0 ? (
@@ -545,7 +546,7 @@ export default function HotelsPage() {
                                   type="button"
                                   onClick={e => {
                                     e.stopPropagation();
-                                    window.location.href = `/hotels/${hotel.id}`;
+                                    window.location.href = `/hotels/${hotelSlug}`;
                                   }}
                                 >
                                   View More

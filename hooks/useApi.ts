@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 // Types
 export interface Hotel {
     id: string;
+    slug?: string;
+    legacySlugs?: string[];
     name: string;
     location: string;
     rating: number;
@@ -66,6 +68,13 @@ const api = {
         return res.json();
     },
 
+    async fetchHotelBySlug(slug: string): Promise<Hotel> {
+        const res = await fetch(`/api/hotels/slug/${slug}`);
+        if (res.status === 404) throw new Error('Hotel not found');
+        if (!res.ok) throw new Error('Failed to fetch hotel by slug');
+        return res.json();
+    },
+
     async fetchPackage(slug: string): Promise<Package> {
         const res = await fetch(`/api/packages/${slug}`);
         if (!res.ok) throw new Error('Failed to fetch package');
@@ -99,6 +108,16 @@ export function useHotel(id: string | undefined) {
         enabled: !!id,
         staleTime: 5 * 60 * 1000, // 5 minutes
         gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
+    });
+}
+
+export function useHotelBySlug(slug: string | undefined) {
+    return useQuery({
+        queryKey: ['hotel-slug', slug],
+        queryFn: () => api.fetchHotelBySlug(slug!),
+        enabled: !!slug,
+        staleTime: 5 * 60 * 1000,
+        gcTime: 10 * 60 * 1000,
     });
 }
 

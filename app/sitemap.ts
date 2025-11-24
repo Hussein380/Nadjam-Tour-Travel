@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next';
 import { db } from '@/lib/firebase/admin';
 import { fetchAllPosts } from '@/lib/sanity';
+import { buildSlugCandidate } from '@/lib/slug';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 3600; // Revalidate every hour
@@ -72,8 +73,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     hotelPages = hotelsSnapshot.docs.map((doc) => {
       const data = doc.data();
       const updatedAt = data.updatedAt?.toDate() || data.createdAt?.toDate() || now;
+      const slug = data.slug || buildSlugCandidate(data.name, doc.id);
       return {
-        url: `${baseUrl}/hotels/${doc.id}`,
+        url: `${baseUrl}/hotels/${slug}`,
         lastModified: updatedAt,
         changeFrequency: 'weekly' as const,
         priority: 0.7,

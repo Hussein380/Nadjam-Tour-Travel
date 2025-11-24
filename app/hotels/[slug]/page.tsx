@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
@@ -12,17 +12,44 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { Button } from "@/components/ui/button";
 import BookingFormModal from "@/components/BookingFormModal";
-import { useHotel } from "@/hooks/useApi";
+import { useHotel, useHotelBySlug } from "@/hooks/useApi";
+import { looksLikeFirestoreId } from "@/lib/slug";
 
 export default function HotelDetailsPage() {
     const params = useParams();
-    const hotelId = params?.id as string;
+    const router = useRouter();
+    const slugParam = params?.slug as string;
     const [bookingModalOpen, setBookingModalOpen] = useState(false);
 
-    // Use React Query hook instead of useEffect + fetch
-    const { data: hotel, isLoading, error, isError } = useHotel(hotelId);
+    const isLegacyId = looksLikeFirestoreId(slugParam);
 
-    // Loading state
+    const {
+        data: hotelBySlug,
+        isLoading: slugLoading,
+        isError: slugError,
+        error: slugErrorDetail,
+    } = useHotelBySlug(!isLegacyId ? slugParam : undefined);
+
+    const {
+        data: hotelById,
+        isLoading: idLoading,
+        isError: idError,
+        error: idErrorDetail,
+    } = useHotel(isLegacyId ? slugParam : undefined);
+
+    const hotel = hotelBySlug ?? hotelById;
+    const isLoading = slugLoading || idLoading;
+    const loadError = slugError ? slugErrorDetail : idErrorDetail;
+
+    useEffect(() => {
+        if (!hotel) return;
+        if (isLegacyId && hotel.slug) {
+            router.replace(`/hotels/${hotel.slug}`, { scroll: false });
+        } else if (!isLegacyId && hotel.slug && hotel.slug !== slugParam) {
+            router.replace(`/hotels/${hotel.slug}`, { scroll: false });
+        }
+    }, [hotel, isLegacyId, router, slugParam]);
+
     if (isLoading) {
         return (
             <div className="flex items-center justify-center h-64">
@@ -31,11 +58,10 @@ export default function HotelDetailsPage() {
         );
     }
 
-    // Error state
-    if (isError || !hotel) {
+    if (!hotel) {
         return (
             <div className="flex items-center justify-center h-64 text-red-500">
-                {error?.message || "Hotel not found."}
+                {loadError?.message || "Hotel not found."}
             </div>
         );
     }
@@ -54,7 +80,7 @@ export default function HotelDetailsPage() {
                         slidesPerView={1}
                         className="rounded-lg overflow-hidden"
                     >
-                        {hotel.images.map((url, idx) => (
+                        {hotel.images.map((url: string, idx: number) => (
                             <SwiperSlide key={idx}>
                                 <div className="relative w-full h-80">
                                     <Image
@@ -82,7 +108,7 @@ export default function HotelDetailsPage() {
             <div className="mb-6">
                 <h2 className="text-xl font-semibold mb-2">Amenities</h2>
                 <ul className="flex flex-wrap gap-2">
-                    {hotel.amenities && hotel.amenities.map((a, i) => (
+                    {hotel.amenities && hotel.amenities.map((a: string, i: number) => (
                         <li key={i} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">{a}</li>
                     ))}
                 </ul>
@@ -104,7 +130,7 @@ export default function HotelDetailsPage() {
                 <div className="mb-6">
                     <h2 className="text-xl font-semibold mb-2">Property Highlights</h2>
                     <ul className="list-disc list-inside text-gray-700">
-                        {hotel.propertyHighlights.map((h, i) => (
+                        {hotel.propertyHighlights.map((h: string, i: number) => (
                             <li key={i}>{h}</li>
                         ))}
                     </ul>
@@ -115,7 +141,7 @@ export default function HotelDetailsPage() {
                 <div className="mb-6">
                     <h2 className="text-xl font-semibold mb-2">Leisure & Activities</h2>
                     <ul className="list-disc list-inside text-gray-700">
-                        {hotel.leisureActivities.map((a, i) => (
+                        {hotel.leisureActivities.map((a: string, i: number) => (
                             <li key={i}>{a}</li>
                         ))}
                     </ul>
@@ -126,7 +152,7 @@ export default function HotelDetailsPage() {
                 <div className="mb-6">
                     <h2 className="text-xl font-semibold mb-2">Nearby Attractions</h2>
                     <ul className="list-disc list-inside text-gray-700">
-                        {hotel.nearbyAttractions.map((a, i) => (
+                        {hotel.nearbyAttractions.map((a: string, i: number) => (
                             <li key={i}>{a}</li>
                         ))}
                     </ul>
@@ -147,7 +173,7 @@ export default function HotelDetailsPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {hotel.roomTypes.map((room, i) => (
+                                {hotel.roomTypes.map((room: any, i: number) => (
                                     <tr key={i} className="border-t border-gray-200">
                                         <td className="px-4 py-2 text-sm text-gray-700">{room.type}</td>
                                         <td className="px-4 py-2 text-sm text-gray-700">{room.beds}</td>
@@ -165,10 +191,7 @@ export default function HotelDetailsPage() {
             <div className="mb-8">
                 <Button
                     onClick={() => {
-                        console.log('Book Now clicked!');
-                        console.log('Current bookingModalOpen state:', bookingModalOpen);
                         setBookingModalOpen(true);
-                        console.log('Set bookingModalOpen to true');
                     }}
                     className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-lg text-lg font-semibold"
                 >
@@ -186,7 +209,6 @@ export default function HotelDetailsPage() {
                 <BookingFormModal
                     open={bookingModalOpen}
                     onClose={() => {
-                        console.log('Closing modal');
                         setBookingModalOpen(false);
                     }}
                     hotelName={hotel.name}
@@ -194,4 +216,5 @@ export default function HotelDetailsPage() {
             )}
         </div>
     );
-} 
+}
+

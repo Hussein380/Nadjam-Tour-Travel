@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "diag:firebase": "node scripts/diag-firebase-admin.js",
-    "diag:sanity": "node scripts/diag-sanity-posts.js"
+    "diag:sanity": "node scripts/diag-sanity-posts.js",
+    "slug:backfill": "npx ts-node --project tsconfig.backfill.json scripts/backfill-hotel-slugs.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

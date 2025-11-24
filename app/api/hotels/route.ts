@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { admin, db } from '@/lib/firebase/admin';
 import cloudinary from 'cloudinary';
 import { z } from 'zod';
-import { FieldValue } from 'firebase-admin/firestore';
 import type { Query } from 'firebase-admin/firestore';
+import { buildSlugCandidate, slugify } from '@/lib/slug';
 
 const hotelSchema = z.object({
   name: z.string().min(1),
@@ -19,6 +19,7 @@ const hotelSchema = z.object({
   discount: z.number().min(0).max(100),
   featured: z.boolean().default(false),
   active: z.boolean().default(true),
+  slug: z.string().optional(),
 });
 
 // Configure Cloudinary with your server-side credentials
@@ -51,6 +52,23 @@ async function uploadToCloudinary(file: File): Promise<string> {
         reject(error);
       });
   });
+}
+
+async function ensureUniqueSlug(baseSlug: string, excludeId?: string): Promise<string> {
+  const sanitizedBase = baseSlug || 'hotel';
+  let candidate = sanitizedBase;
+  let attempt = 1;
+
+  while (attempt < 50) {
+    const snapshot = await db.collection('hotels').where('slug', '==', candidate).limit(1).get();
+    if (snapshot.empty || snapshot.docs[0].id === excludeId) {
+      return candidate;
+    }
+    candidate = `${sanitizedBase}-${attempt}`;
+    attempt += 1;
+  }
+
+  return `${sanitizedBase}-${Date.now()}`;
 }
 
 export async function GET(req: NextRequest) {
@@ -111,12 +129,17 @@ export async function GET(req: NextRequest) {
         }
       });
     }
-    const hotels = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate(),
-      updatedAt: doc.data().updatedAt?.toDate(),
-    }));
+    const hotels = snapshot.docs.map(doc => {
+      const data = doc.data();
+      const safeSlug = data.slug || buildSlugCandidate(data.name, doc.id);
+      return {
+        id: doc.id,
+        ...data,
+        slug: safeSlug,
+        createdAt: data.createdAt?.toDate(),
+        updatedAt: data.updatedAt?.toDate(),
+      };
+    });
 
     // Add cache headers for better performance
     return NextResponse.json(hotels, {
@@ -142,6 +165,11 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     console.log('Received POST /api/hotels body:', body);
 
+    const docRef = db.collection('hotels').doc();
+    const slugInput = typeof body.slug === 'string' ? body.slug : body.name;
+    const slugCandidate = buildSlugCandidate(slugInput, docRef.id);
+    const slug = await ensureUniqueSlug(slugCandidate, docRef.id);
+
     const finalHotelData = {
       ...body,
       images: Array.isArray(body.images) ? body.images : [],
@@ -154,18 +182,22 @@ export async function POST(req: NextRequest) {
       active: body.active === true || body.active === 'true',
       amenities: Array.isArray(body.amenities)
         ? body.amenities
-        : body.amenities.split(',').map((a: string) => a.trim()),
+        : typeof body.amenities === 'string'
+          ? body.amenities.split(',').map((a: string) => a.trim())
+          : [],
       types: Array.isArray(body.types) ? body.types : [],
       name_lower: body.name ? body.name.toLowerCase() : '',
       location_lower: body.location ? body.location.toLowerCase() : '',
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      slug,
+      legacySlugs: [],
     };
     console.log('finalHotelData to be saved:', finalHotelData);
 
-    await db.collection('hotels').add(finalHotelData);
+    await docRef.set(finalHotelData);
 
-    return NextResponse.json({ message: 'Hotel created successfully!' }, { status: 201 });
+    return NextResponse.json({ message: 'Hotel created successfully!', id: docRef.id, slug }, { status: 201 });
   } catch (error: any) {
     console.error('Error creating hotel:', error);
     return NextResponse.json({ error: 'Failed to create hotel' }, { status: 500 });

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { admin, db } from '@/lib/firebase/admin';
 import { v2 as cloudinary } from 'cloudinary';
+import { buildSlugCandidate } from '@/lib/slug';
 
 // Configure Cloudinary with your server-side credentials
 cloudinary.config({
@@ -31,6 +32,23 @@ async function uploadToCloudinary(file: File): Promise<string> {
     });
 }
 
+async function ensureUniqueSlug(baseSlug: string, excludeId?: string): Promise<string> {
+    const sanitizedBase = baseSlug || 'hotel';
+    let candidate = sanitizedBase;
+    let attempt = 1;
+
+    while (attempt < 50) {
+        const snapshot = await db.collection('hotels').where('slug', '==', candidate).limit(1).get();
+        if (snapshot.empty || snapshot.docs[0].id === excludeId) {
+            return candidate;
+        }
+        candidate = `${sanitizedBase}-${attempt}`;
+        attempt += 1;
+    }
+
+    return `${sanitizedBase}-${Date.now()}`;
+}
+
 export async function GET(req: NextRequest, context: { params: { id: string } }) {
     // Fix for Next.js 13+ app directory: await params if needed
     const params = await (context.params instanceof Promise ? context.params : Promise.resolve(context.params));
@@ -45,11 +63,21 @@ export async function GET(req: NextRequest, context: { params: { id: string } })
                 }
             });
         }
+        const data = doc.data() || {};
+        if (!data.slug) {
+            const slugCandidate = buildSlugCandidate(data.name, doc.id);
+            data.slug = await ensureUniqueSlug(slugCandidate, doc.id);
+            await doc.ref.update({
+                slug: data.slug,
+                legacySlugs: Array.isArray(data.legacySlugs) ? data.legacySlugs : [],
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+        }
         const hotel = {
             id: doc.id,
-            ...doc.data(),
-            createdAt: doc.data()?.createdAt?.toDate(),
-            updatedAt: doc.data()?.updatedAt?.toDate(),
+            ...data,
+            createdAt: data?.createdAt?.toDate(),
+            updatedAt: data?.updatedAt?.toDate(),
         };
 
         // Add cache headers for better performance
@@ -72,6 +100,13 @@ export async function PUT(req: NextRequest, context: { params: { id: string } })
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
         await admin.auth().verifyIdToken(token);
+        const hotelId = params.id;
+        const docRef = db.collection('hotels').doc(hotelId);
+        const existingDoc = await docRef.get();
+        if (!existingDoc.exists) {
+            return NextResponse.json({ error: 'Hotel not found' }, { status: 404 });
+        }
+        const existingData = existingDoc.data() || {};
         let hotelData: any = {};
         let imageUrl: string | undefined = undefined;
         let imageFile: File | null = null;
@@ -111,6 +146,7 @@ export async function PUT(req: NextRequest, context: { params: { id: string } })
         if ('types' in hotelData) finalHotelData.types = Array.isArray(hotelData.types) ? hotelData.types : [];
         // Add any other fields present in hotelData that aren't already handled
         Object.keys(hotelData).forEach(key => {
+            if (key === 'slug') return;
             if (!(key in finalHotelData)) {
                 finalHotelData[key] = hotelData[key];
             }
@@ -118,8 +154,27 @@ export async function PUT(req: NextRequest, context: { params: { id: string } })
         if (imageUrl) {
             finalHotelData.image = imageUrl;
         }
-        const hotelId = params.id;
-        await db.collection('hotels').doc(hotelId).update(finalHotelData);
+        if (typeof hotelData.slug === 'string' && hotelData.slug.trim().length > 0) {
+            const targetSlug = buildSlugCandidate(hotelData.slug, hotelId);
+            if (!existingData.slug || targetSlug !== existingData.slug) {
+                finalHotelData.slug = await ensureUniqueSlug(targetSlug, hotelId);
+                const legacy = Array.isArray(existingData.legacySlugs) ? existingData.legacySlugs : [];
+                const nextLegacy = new Set(legacy);
+                if (existingData.slug) {
+                    nextLegacy.add(existingData.slug);
+                }
+                if (nextLegacy.size > 0) {
+                    finalHotelData.legacySlugs = Array.from(nextLegacy);
+                }
+            }
+        } else if (!existingData.slug) {
+            const fallbackSlug = buildSlugCandidate(existingData.name ?? finalHotelData.name, hotelId);
+            finalHotelData.slug = await ensureUniqueSlug(fallbackSlug, hotelId);
+            if (existingData.legacySlugs) {
+                finalHotelData.legacySlugs = existingData.legacySlugs;
+            }
+        }
+        await docRef.update(finalHotelData);
         return NextResponse.json({ message: 'Hotel updated successfully!' }, { status: 200 });
     } catch (error: any) {
         console.error(`Error updating hotel ${context.params.id}:`, error);
