@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { MapPin, Star, Award, Globe, Heart, ArrowRight, Phone, ChevronLeft, ChevronRight, Sparkles, MessageSquare, ShieldCheck, Clock, CheckCircle2 } from "lucide-react"
+import { MapPin, Star, Award, Globe, Heart, ArrowRight, Phone, ChevronLeft, ChevronRight, Sparkles, MessageSquare, ShieldCheck, Clock, CheckCircle2, Plane, Hotel, Compass } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -200,15 +200,16 @@ export default function HomePage() {
             journeys that connect you with nature's most spectacular wonders.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center px-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center px-4 flex-wrap">
             <Button
               asChild
               size="lg"
-              className="w-full sm:w-auto bg-white text-gray-900 hover:bg-gray-100 px-6 sm:px-8 py-3 text-base sm:text-lg font-medium rounded-none border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+              variant="outline"
+              className="w-full sm:w-auto border-2 border-white text-white hover:bg-white hover:text-gray-900 px-6 sm:px-8 py-3 text-base sm:text-lg font-medium rounded-none bg-transparent"
             >
               <Link href="/packages">
+                <Compass className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
                 Explore Adventures
-                <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
               </Link>
             </Button>
             <Button
@@ -217,7 +218,21 @@ export default function HomePage() {
               variant="outline"
               className="w-full sm:w-auto border-2 border-white text-white hover:bg-white hover:text-gray-900 px-6 sm:px-8 py-3 text-base sm:text-lg font-medium rounded-none bg-transparent"
             >
-              <Link href="#contact">Get In Touch</Link>
+              <Link href="/flights">
+                <Plane className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
+                Search Flights
+              </Link>
+            </Button>
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="w-full sm:w-auto border-2 border-white text-white hover:bg-white hover:text-gray-900 px-6 sm:px-8 py-3 text-base sm:text-lg font-medium rounded-none bg-transparent"
+            >
+              <Link href="/hotels">
+                <Hotel className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
+                Hotels
+              </Link>
             </Button>
           </div>
         </div>

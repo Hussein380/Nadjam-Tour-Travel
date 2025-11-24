@@ -154,7 +154,7 @@ export function ChatBot() {
       setShowAssistantPrompt(false)
     }
     window.addEventListener("open-nadjam-chat", handler)
-    ;(window as any).openNadjamChat = handler
+      ; (window as any).openNadjamChat = handler
     return () => {
       window.removeEventListener("open-nadjam-chat", handler)
       if ((window as any).openNadjamChat === handler) {
@@ -259,7 +259,14 @@ export function ChatBot() {
       {/* Floating AI prompt */}
       {!isOpen && showAssistantPrompt && (
         <div className="fixed bottom-36 right-6 z-40 max-w-xs w-64 bg-white shadow-lg rounded-2xl border border-gray-200 p-4 transition-all duration-300">
-          <div className="flex items-center space-x-2 text-sm font-semibold text-gray-900">
+          <button
+            onClick={() => setShowAssistantPrompt(false)}
+            className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 transition-colors"
+            aria-label="Close AI prompt"
+          >
+            <X className="w-4 h-4" />
+          </button>
+          <div className="flex items-center space-x-2 text-sm font-semibold text-gray-900 pr-6">
             <Sparkles className="w-4 h-4 text-amber-600" />
             <span>Nadjam AI is online</span>
           </div>

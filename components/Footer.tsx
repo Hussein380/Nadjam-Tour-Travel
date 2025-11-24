@@ -188,7 +188,38 @@ export function Footer() {
                 style={{ padding: "4px", borderRadius: "6px", boxShadow: "0 2px 8px rgba(0,0,0,0.12)" }}
               />
             </a>
-            {/* Add more partners here as needed */}
+            <a
+              href="https://www.getyourguide.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="GetYourGuide"
+              className="hover:opacity-80 transition"
+            >
+              <Image
+                src="/images/partners/getyourguide.png"
+                alt="GetYourGuide"
+                width={180}
+                height={40}
+                className="h-10 w-auto object-contain bg-white"
+                style={{ padding: "4px", borderRadius: "6px", boxShadow: "0 2px 8px rgba(0,0,0,0.12)" }}
+              />
+            </a>
+            <a
+              href="https://www.aviasales.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Aviasales"
+              className="hover:opacity-80 transition"
+            >
+              <Image
+                src="/images/partners/aviasales.png"
+                alt="Aviasales"
+                width={180}
+                height={40}
+                className="h-10 w-auto object-contain bg-white"
+                style={{ padding: "4px", borderRadius: "6px", boxShadow: "0 2px 8px rgba(0,0,0,0.12)" }}
+              />
+            </a>
           </div>
         </div>
 
