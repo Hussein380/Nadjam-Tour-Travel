@@ -83,6 +83,16 @@ export default function RootLayout({
             gtag('config', 'G-4VZS2PFML0');
           `}
         </Script>
+        {/* Google Ads Tag */}
+        <Script src="https://www.googletagmanager.com/gtag/js?id=AW-17703597946" strategy="afterInteractive" />
+        <Script id="google-ads-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);} 
+            gtag('js', new Date());
+            gtag('config', 'AW-17703597946');
+          `}
+        </Script>
         <ReactQueryProvider>
           <ErrorBoundary>
             <Navbar />
