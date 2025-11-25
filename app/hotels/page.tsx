@@ -18,6 +18,7 @@ import { Hotel } from '@/lib/types';
 import Link from "next/link";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useHotelLocations } from "@/hooks/useApi";
+import Script from 'next/script';
 
 export default function HotelsPage() {
   const [loading, setLoading] = useState(true);
@@ -179,6 +180,8 @@ export default function HotelsPage() {
     // setHasMore(endIndex < filteredHotels.length); // This line is no longer needed
   }, [filteredHotels]); // This useEffect is no longer needed
 
+  // Script for Booking.com widget is now directly in the JSX
+
   // Reset page when filters change
   useEffect(() => {
     // setPage(1); // This line is no longer needed
@@ -262,67 +265,28 @@ export default function HotelsPage() {
         </div>
       </section>
 
-      {/* Search Section */}
+      {/* Booking.com Widget Section */}
       <section className="relative -mt-16 z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
-            <CardContent className="p-6 sm:p-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 z-10" />
-                  <Select
-                    value={filters.location || "all"}
-                    onValueChange={value => updateFilter('location', value === "all" ? "" : value)}
-                  >
-                    <SelectTrigger className="pl-12 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500">
-                      <SelectValue placeholder="Where are you going?" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Locations</SelectItem>
-                      {locations.map(loc => (
-                        <SelectItem key={loc} value={loc}>{loc}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+          <div className="bg-white rounded-lg shadow-2xl overflow-hidden">
+            <div className="p-1 bg-gradient-to-r from-blue-600 to-teal-600">
+              <div className="bg-white p-4">
+                <div id="tp-widget" className="min-h-[200px] flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                    <p className="text-gray-600">Loading booking options...</p>
+                  </div>
                 </div>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <Input
-                    placeholder="Check-in"
-                    type="date"
-                    className="pl-12 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-                  />
-                </div>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <Input
-                    placeholder="Check-out"
-                    type="date"
-                    className="pl-12 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-                  />
-                </div>
-                <div className="relative">
-                  <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <Select>
-                    <SelectTrigger className="pl-12 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500">
-                      <SelectValue placeholder="Guests" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">1 Guest</SelectItem>
-                      <SelectItem value="2">2 Guests</SelectItem>
-                      <SelectItem value="3">3 Guests</SelectItem>
-                      <SelectItem value="4">4+ Guests</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button className="h-12 bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white font-medium text-lg">
-                  <Search className="w-5 h-5 mr-2" />
-                  Search
-                </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
+        <script 
+          async 
+          src="https://tpembd.com/content?trs=472027&shmarker=682890&locale=en&sustainable=false&deals=false&border_radius=5&plain=true&powered_by=true&promo_id=2693&campaign_id=84" 
+          charSet="utf-8"
+          id="booking-widget-script"
+        ></script>
       </section>
 
       {/* Filters and Categories */}
@@ -346,8 +310,25 @@ export default function HotelsPage() {
                       placeholder="Search hotel names..."
                       value={searchInput}
                       onChange={(e) => setSearchInput(e.target.value)}
-                      className="w-full"
+                      className="w-full mb-4"
                     />
+                    <div className="relative">
+                      <h3 className="font-medium text-gray-900 mb-3">Location</h3>
+                      <Select
+                        value={filters.location || "all"}
+                        onValueChange={value => updateFilter('location', value === "all" ? "" : value)}
+                      >
+                        <SelectTrigger className="w-full border-gray-200 focus:border-blue-500 focus:ring-blue-500">
+                          <SelectValue placeholder="All Locations" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Locations</SelectItem>
+                          {locations.map(loc => (
+                            <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
 
                   {/* Amenities Dropdown Filter */}
