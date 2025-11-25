@@ -18,7 +18,6 @@ import { Hotel } from '@/lib/types';
 import Link from "next/link";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useHotelLocations } from "@/hooks/useApi";
-import Script from 'next/script';
 
 export default function HotelsPage() {
   const [loading, setLoading] = useState(true);
@@ -265,31 +264,7 @@ export default function HotelsPage() {
         </div>
       </section>
 
-      {/* Booking.com Widget Section */}
-      <section className="relative -mt-16 z-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="bg-white rounded-lg shadow-2xl overflow-hidden">
-            <div className="p-1 bg-gradient-to-r from-blue-600 to-teal-600">
-              <div className="bg-white p-4">
-                <div id="tp-widget" className="min-h-[200px] flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                    <p className="text-gray-600">Loading booking options...</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <script 
-          async 
-          src="https://tpembd.com/content?trs=472027&shmarker=682890&locale=en&sustainable=false&deals=false&border_radius=5&plain=true&powered_by=true&promo_id=2693&campaign_id=84" 
-          charSet="utf-8"
-          id="booking-widget-script"
-        ></script>
-      </section>
-
-      {/* Filters and Categories */}
+{/* Filters and Categories */}
       <section className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex flex-col lg:flex-row gap-8">
