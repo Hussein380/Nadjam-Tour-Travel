@@ -253,7 +253,7 @@ export default function HotelsPage() {
                 size="lg"
                 variant="outline"
                 className="border-2 border-white text-white hover:bg-white hover:text-gray-900 px-8 py-3 text-lg font-medium bg-transparent"
-                onClick={() => window.open('https://booking.tpo.lv/afqHcXqw', '_blank')}
+                onClick={() => window.open('https://tp.media/r?marker=682890&trs=472027&p=2076&u=https%3A%2F%2Fbooking.com&campaign_id=84', '_blank')}
               >
                 Browse Hotels
               </Button>
