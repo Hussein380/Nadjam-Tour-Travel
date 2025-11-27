@@ -1,0 +1,10 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /nadjam/
+Disallow: /_next/
+
+# Sitemap
+Sitemap: https://www.nadjamtravel.com/sitemap.xml
